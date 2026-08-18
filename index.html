@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Süper Lig Tahmin Yarışması (6 Kişilik - 34 Hafta)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
+        
+        .main-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 450px; }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #334155; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .controls-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; justify-content: space-between; }
+        select { padding: 6px; font-size: 13px; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; }
+        
+        .match-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 13px; }
+        .team-box { display: flex; align-items: center; gap: 6px; width: 140px; }
+        .team-box.left { justify-content: flex-end; text-align: right; }
+        .team-box.right { justify-content: flex-start; text-align: left; }
+        .team-logo { width: 22px; height: 22px; object-fit: contain; }
+
+        input[type="number"] { width: 35px; text-align: center; padding: 4px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e2e8f0; padding: 5px; text-align: center; font-size: 12px; }
+        th { background-color: #1e293b; color: white; }
+        
+        .team-cell { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .ucl-sampiyon { background-color: #0f172a !important; color: white; font-weight: bold; }
+        .ucl-eleme { background-color: #3b82f6 !important; color: white; }
+        .uel { background-color: #f97316 !important; color: white; }
+        .ucl-konferans { background-color: #10b981 !important; color: white; }
+        .dusme-hatti { background-color: #ef4444 !important; color: white; }
+
+        .btn { display: block; width: 100%; background-color: #2563eb; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-green { background-color: #10b981; }
+        .btn-green:hover { background-color: #059669; }
+    </style>
+</head>
+<body>
+
+    <h1>Süper Lig Tahmin Yarışması ⚽</h1>
+    <div class="subtitle">6 Kişilik Özel Tahmin Modülü & Lig Simülatörü</div>
+
+    <div class="main-container">
+        <!-- 1. KUTU: GERÇEK MAÇ SONUÇLARI -->
+        <div class="card">
+            <h2>
+                <span>Gerçek Maçlar / Sonuçlar</span>
+                <select id="gercekHaftaSecici" onchange="gercekHaftaDegisti()"></select>
+            </h2>
+            <div id="gercekMaclarAlani"></div>
+            <button class="btn" onclick="gercekPuanlariHesapla()">Gerçek Puan Durumunu Güncelle</button>
+        </div>
+
+        <!-- 2. KUTU: 6 KİŞİLİK TAHMİN PANELİ -->
+        <div class="card">
+            <h2>
+                <span>Tahmin Giriş Paneli</span>
+                <select id="profilSecici" onchange="profilDegisti()">
+                    <option value="0">Carry</option>
+                    <option value="1">Bilimsel NoFlexs</option>
+                    <option value="2">Atıfheist</option>
+                    <option value="3">Lazori</option>
+                    <option value="4">Rookie</option>
+                    <option value="5">Misafir</option>
+                </select>
+            </h2>
+            <div class="controls-row">
+                <span id="aktifProfilAdi" style="font-weight: bold; font-size: 13px; color: #2563eb;">Carry Tahminleri</span>
+                <select id="tahminHaftaSecici" onchange="tahminHaftaDegisti()"></select>
+            </div>
+            <div id="tahminMaclarAlani"></div>
+            <button class="btn btn-green" onclick="tahminleriKaydetMesaji()">Tahminleri Kaydet</button>
+        </div>
+
+        <!-- 3. KUTU: GERÇEK PUAN DURUMU -->
+        <div class="card" style="width: 500px;">
+            <h2>Gerçek Puan Durumu</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sıra</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>Av</th><th>P</th>
+                    </tr>
+                </thead>
+                <tbody id="gercekPuanTablosuBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 4. KUTU: YARIŞMA LİGİ -->
+        <div class="card" style="width: 500px;">
+            <h2>Tahmin Yarışması Ligi (Puanlar)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sıra</th><th>Oyuncu</th><th>Tam Skor</th><th>Fark/Sonuç</th><th>Toplam Puan</th>
+                    </tr>
+                </thead>
+                <tbody id="yarismaTablosuBody"></tbody>
+            </table>
+            <button class="btn" onclick="yarismaPuanlariniHesapla()">Yarışma Puanlarını Hesapla</button>
+        </div>
+    </div>
+
+    <script>
+        const oyuncuIsimleri = ["Carry", "Bilimsel NoFlexs", "Atıfheist", "Lazori", "Rookie", "Misafir"];
+        const takimListesi = [
+            "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor", 
+            "İstanbul Başakşehir", "Göztepe", "Samsunspor", "Çaykur Rizespor", 
+            "Konyaspor", "Kocaelispor", "Alanyaspor", "Gaziantep FK", 
+            "Kasımpaşa", "Gençlerbirliği", "Eyüpspor", "Erzurumspor FK", 
+            "Amed Sportif Faaliyetler", "Çorum FK"
+        ];
+
+        function logoGetir(takimAdi) {
+            let dosyaAdi = takimAdi
+                .toLowerCase()
+                .replace(/ü/g, 'u')
+                .replace(/ö/g, 'o')
+                .replace(/ş/g, 's')
+                .replace(/ç/g, 'c')
+                .replace(/ğ/g, 'g')
+                .replace(/ı/g, 'i')
+                .replace(/ /g, '-');
+            return `logos/${dosyaAdi}.png`;
+        }
+
+        let gercekFikstur = {};
+        let oyuncuTahminleri = [{}, {}, {}, {}, {}, {}];
+
+        function verileriYukle() {
+            let versiyon = "v3_tff_resmi_fikstur";
+            if (localStorage.getItem("superlig_versiyon") !== versiyon) {
+                localStorage.clear();
+                localStorage.setItem("superlig_versiyon", versiyon);
+            }
+
+            let kayitliGercek = localStorage.getItem("superlig_gercekFikstur");
+            let kayitliTahmin = localStorage.getItem("superlig_oyuncuTahminleri");
+
+            if (kayitliGercek) {
+                gercekFikstur = JSON.parse(kayitliGercek);
+            } else {
+                fiksturOlustur(gercekFikstur);
+            }
+
+            if (kayitliTahmin) {
+                oyuncuTahminleri = JSON.parse(kayitliTahmin);
+            } else {
+                for(let p = 0; p < 6; p++) {
+                    oyuncuTahminleri[p] = JSON.parse(JSON.stringify(gercekFikstur));
+                }
+            }
+        }
+
+        function verileriKaydet() {
+            localStorage.setItem("superlig_gercekFikstur", JSON.stringify(gercekFikstur));
+            localStorage.setItem("superlig_oyuncuTahminleri", JSON.stringify(oyuncuTahminleri));
+        }
+
+        function fiksturOlustur(hedefFikstur) {
+            let totalHafta = 17;
+
+            // 1. Hafta
+            hedefFikstur[1] = [
+                { ev: "Galatasaray", dep: "Çorum FK", evSkor: "2", depSkor: "2" },
+                { ev: "Konyaspor", dep: "Çaykur Rizespor", evSkor: "0", depSkor: "1" },
+                { ev: "Kasımpaşa", dep: "Trabzonspor", evSkor: "1", depSkor: "1" },
+                { ev: "Gaziantep FK", dep: "Alanyaspor", evSkor: "1", depSkor: "1" },
+                { ev: "Gençlerbirliği", dep: "Fenerbahçe", evSkor: "2", depSkor: "1" },
+                { ev: "İstanbul Başakşehir", dep: "Kocaelispor", evSkor: "2", depSkor: "0" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Erzurumspor FK", evSkor: "3", depSkor: "0" },
+                { ev: "Beşiktaş", dep: "Eyüpspor", evSkor: "1", depSkor: "0" },
+                { ev: "Samsunspor", dep: "Göztepe", evSkor: "", depSkor: "" }
+            ];
+
+            // 2. Hafta
+            hedefFikstur[2] = [
+                { ev: "Erzurumspor FK", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" }
+            ];
+
+            // 3. Hafta
+            hedefFikstur[3] = [
+                { ev: "Gençlerbirliği", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Galatasaray", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Kocaelispor", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Çorum FK", evSkor: "", depSkor: "" }
+            ];
+
+            // 4. Hafta
+            hedefFikstur[4] = [
+                { ev: "Çorum FK", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Erzurumspor FK", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Alanyaspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 5. Hafta
+            hedefFikstur[5] = [
+                { ev: "Galatasaray", dep: "Kocaelispor", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Trabzonspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 6. Hafta
+            hedefFikstur[6] = [
+                { ev: "Erzurumspor FK", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Alanyaspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 7. Hafta
+            hedefFikstur[7] = [
+                { ev: "Beşiktaş", dep: "Kocaelispor", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Galatasaray", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Trabzonspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 8. Hafta
+            hedefFikstur[8] = [
+                { ev: "Kasımpaşa", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Erzurumspor FK", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Gaziantep FK", evSkor: "", depSkor: "" }
+            ];
+
+            // 9. Hafta
+            hedefFikstur[9] = [
+                { ev: "Samsunspor", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Galatasaray", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
+            ];
+
+            // 10. Hafta
+            hedefFikstur[10] = [
+                { ev: "Gençlerbirliği", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Erzurumspor FK", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Göztepe", evSkor: "", depSkor: "" }
+            ];
+
+            // 11. Hafta
+            hedefFikstur[11] = [
+                { ev: "Galatasaray", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
+            ];
+
+            // 12. Hafta
+            hedefFikstur[12] = [
+                { ev: "Galatasaray", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Erzurumspor FK", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Gaziantep FK", evSkor: "", depSkor: "" }
+            ];
+
+            // 13. Hafta
+            hedefFikstur[13] = [
+                { ev: "Gaziantep FK", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Kocaelispor", evSkor: "", depSkor: "" }
+            ];
+
+            // 14. Hafta
+            hedefFikstur[14] = [
+                { ev: "Erzurumspor FK", dep: "Kocaelispor", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Samsunspor", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Galatasaray", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Göztepe", evSkor: "", depSkor: "" }
+            ];
+
+            // 15. Hafta
+            hedefFikstur[15] = [
+                { ev: "Erzurumspor FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Fenerbahçe", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "Samsunspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 16. Hafta
+            hedefFikstur[16] = [
+                { ev: "Kasımpaşa", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Eyüpspor", evSkor: "", depSkor: "" },
+                { ev: "Samsunspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Göztepe", evSkor: "", depSkor: "" },
+                { ev: "Galatasaray", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "Trabzonspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
+            ];
+
+            // 17. Hafta
+            hedefFikstur[17] = [
+                { ev: "Fenerbahçe", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
+                { ev: "Kocaelispor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
+                { ev: "Alanyaspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
+                { ev: "Çaykur Rizespor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Galatasaray", evSkor: "", depSkor: "" },
+                { ev: "Çorum FK", dep: "Konyaspor", evSkor: "", depSkor: "" },
+                { ev: "Göztepe", dep: "Beşiktaş", evSkor: "", depSkor: "" },
+                { ev: "Erzurumspor FK", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Eyüpspor", dep: "Samsunspor", evSkor: "", depSkor: "" }
+            ];
+
+            // 2. Devre Fikstürü (Rövanşlar - 18 ile 34. Hafta arası)
+            for (let hafta = 1; hafta <= totalHafta; hafta++) {
+                let ikinciDevreHafta = hafta + totalHafta;
+                let birinciDevreMaclari = hedefFikstur[hafta];
+                let yeniHaftaMaclari = [];
+
+                birinciDevreMaclari.forEach(mac => {
+                    yeniHaftaMaclari.push({ ev: mac.dep, dep: mac.ev, evSkor: "", depSkor: "" });
+                });
+                hedefFikstur[ikinciDevreHafta] = yeniHaftaMaclari;
+            }
+        }
+
+        function arayuzuBaslat() {
+            verileriYukle();
+            let gSecici = document.getElementById("gercekHaftaSecici");
+            let tSecici = document.getElementById("tahminHaftaSecici");
+            gSecici.innerHTML = "";
+            tSecici.innerHTML = "";
+            for (let h = 1; h <= 34; h++) {
+                gSecici.innerHTML += `<option value="${h}">${h}. Hafta</option>`;
+                tSecici.innerHTML += `<option value="${h}">${h}. Hafta</option>`;
+            }
+            gercekHaftaDegisti();
+            tahminHaftaDegisti();
+            gercekPuanlariHesapla();
+            yarismaPuanlariniHesapla();
+        }
+
+        function gercekHaftaDegisti() {
+            let h = document.getElementById("gercekHaftaSecici").value;
+            let alan = document.getElementById("gercekMaclarAlani");
+            alan.innerHTML = "";
+            if(!gercekFikstur[h]) return;
+            gercekFikstur[h].forEach((mac, index) => {
+                alan.innerHTML += `
+                    <div class="match-row">
+                        <div class="team-box left">
+                            <span>${mac.ev}</span>
+                            <img src="${logoGetir(mac.ev)}" class="team-logo" alt="">
+                        </div>
+                        <div>
+                            <input type="number" id="g_h${h}_m${index}_ev" value="${mac.evSkor}" oninput="gercekSkorKaydet(${h}, ${index})"> - 
+                            <input type="number" id="g_h${h}_m${index}_dep" value="${mac.depSkor}" oninput="gercekSkorKaydet(${h}, ${index})">
+                        </div>
+                        <div class="team-box right">
+                            <img src="${logoGetir(mac.dep)}" class="team-logo" alt="">
+                            <span>${mac.dep}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function gercekSkorKaydet(h, i) {
+            gercekFikstur[h][i].evSkor = document.getElementById(`g_h${h}_m${i}_ev`).value;
+            gercekFikstur[h][i].depSkor = document.getElementById(`g_h${h}_m${i}_dep`).value;
+            verileriKaydet();
+        }
+
+        function profilDegisti() {
+            let pIndex = document.getElementById("profilSecici").value;
+            document.getElementById("aktifProfilAdi").innerText = `${oyuncuIsimleri[pIndex]} Tahminleri`;
+            tahminHaftaDegisti();
+        }
+
+        function tahminHaftaDegisti() {
+            let p = document.getElementById("profilSecici").value;
+            let h = document.getElementById("tahminHaftaSecici").value;
+            let alan = document.getElementById("tahminMaclarAlani");
+            alan.innerHTML = "";
+            if(!oyuncuTahminleri[p][h]) return;
+            oyuncuTahminleri[p][h].forEach((mac, i) => {
+                alan.innerHTML += `
+                    <div class="match-row">
+                        <div class="team-box left">
+                            <span>${mac.ev}</span>
+                            <img src="${logoGetir(mac.ev)}" class="team-logo" alt="">
+                        </div>
+                        <div>
+                            <input type="number" id="t_p${p}_h${h}_m${i}_ev" value="${mac.evSkor}" oninput="tahminSkorKaydet(${p}, ${h}, ${i})"> - 
+                            <input type="number" id="t_p${p}_h${h}_m${i}_dep" value="${mac.depSkor}" oninput="tahminSkorKaydet(${p}, ${h}, ${i})">
+                        </div>
+                        <div class="team-box right">
+                            <img src="${logoGetir(mac.dep)}" class="team-logo" alt="">
+                            <span>${mac.dep}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function tahminSkorKaydet(p, h, i) {
+            oyuncuTahminleri[p][h][i].evSkor = document.getElementById(`t_p${p}_h${h}_m${i}_ev`).value;
+            oyuncuTahminleri[p][h][i].depSkor = document.getElementById(`t_p${p}_h${h}_m${i}_dep`).value;
+            verileriKaydet();
+        }
+
+        function tahminleriKaydetMesaji() { verileriKaydet(); alert("Kaydedildi!"); }
+
+        function gercekPuanlariHesapla() {
+            let pd = {};
+            takimListesi.forEach(t => pd[t] = {o:0, g:0, b:0, m:0, a:0, y:0, p:0});
+            for(let h=1; h<=34; h++) {
+                if(!gercekFikstur[h]) continue;
+                gercekFikstur[h].forEach(m => {
+                    if(m.evSkor === "" || m.depSkor === "") return;
+                    let es=Number(m.evSkor), ds=Number(m.depSkor);
+                    pd[m.ev].o++; pd[m.dep].o++;
+                    pd[m.ev].a += es; pd[m.ev].y += ds;
+                    pd[m.dep].a += ds; pd[m.dep].y += es;
+                    if(es > ds) { pd[m.ev].g++; pd[m.ev].p+=3; pd[m.dep].m++; }
+                    else if(es < ds) { pd[m.dep].g++; pd[m.dep].p+=3; pd[m.ev].m++; }
+                    else { pd[m.ev].b++; pd[m.ev].p+=1; pd[m.dep].b++; pd[m.dep].p+=1; }
+                });
+            }
+            let tbody = document.getElementById("gercekPuanTablosuBody");
+            tbody.innerHTML = "";
+            let sirali = Object.keys(pd).sort((a,b) => (pd[b].p - pd[a].p) || ((pd[b].a-pd[b].y)-(pd[a].a-pd[a].y)));
+            sirali.forEach((t, i) => {
+                let s = pd[t], av = s.a-s.y;
+                let tr = document.createElement("tr");
+                if (i === 0) tr.className = "ucl-sampiyon";
+                else if (i === 1) tr.className = "ucl-eleme";
+                else if (i === 2) tr.className = "uel";
+                else if (i === 3) tr.className = "ucl-konferans";
+                else if (i >= sirali.length - 3) tr.className = "dusme-hatti";
+
+                tr.innerHTML = `
+                    <td><b>${i+1}.</b></td>
+                    <td>
+                        <div class="team-cell">
+                            <img src="${logoGetir(t)}" class="team-logo" alt="">
+                            <b>${t}</b>
+                        </div>
+                    </td>
+                    <td>${s.o}</td><td>${s.g}</td><td>${s.b}</td><td>${s.m}</td><td>${s.a}</td><td>${s.y}</td><td>${av}</td><td><b>${s.p}</b></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function yarismaPuanlariniHesapla() {
+            let stats = [];
+            for(let p=0; p<6; p++) {
+                let pts=0, tam=0, fark=0;
+                for(let h=1; h<=34; h++) {
+                    if(!gercekFikstur[h] || !oyuncuTahminleri[p][h]) continue;
+                    gercekFikstur[h].forEach((gm, i) => {
+                        let tm = oyuncuTahminleri[p][h][i];
+                        if(gm.evSkor==="" || tm.evSkor==="") return;
+                        let ge=Number(gm.evSkor), gd=Number(gm.depSkor), te=Number(tm.evSkor), td=Number(tm.depSkor);
+                        if(ge==te && gd==td) { pts+=10; tam++; }
+                        else if((ge-gd == te-td) && ((ge>gd && te>td) || (ge<gd && te<td) || (ge==gd && te==td))) { pts+=7; fark++; }
+                        else if((ge>gd && te>td) || (ge<gd && te<td) || (ge==gd && te==td)) { pts+=5; fark++; }
+                    });
+                }
+                stats.push({name: oyuncuIsimleri[p], tam, fark, pts});
+            }
+            stats.sort((a,b) => b.pts - a.pts);
+            let yBody = document.getElementById("yarismaTablosuBody");
+            yBody.innerHTML = "";
+            stats.forEach((o, i) => yBody.innerHTML += `<tr><td><b>${i+1}.</b></td><td><b>${o.name}</b></td><td>${o.tam}</td><td>${o.fark}</td><td><b>${o.pts}</b></td></tr>`);
+        }
+
+        arayuzuBaslat();
+    </script>
+</body>
+</html>
