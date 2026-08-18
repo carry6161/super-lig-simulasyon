@@ -2,27 +2,45 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Süper Lig Tahmin Yarışması (6 Kişilik - 34 Hafta)</title>
+    <title>Süper Lig Tahmin, Futbolcu Bulma & Rüya Kadro Simülasyonu</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         h1 { text-align: center; color: #1e293b; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
         
-        .main-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 450px; }
+        /* ÜST MENÜ SEKME ÇUBUĞU */
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #cbd5e1; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: #334155; transition: 0.2s; }
+        .tab-btn:hover { background: #94a3b8; }
+        .tab-btn.active { background: #2563eb; color: white; }
+
+        .main-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; align-items: flex-start; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 480px; box-sizing: border-box; }
+        
+        /* OYUN SAYFALARI İÇİN GENİŞ KUTULAR */
+        .card-game { width: 600px; display: none; }
+        
         h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #334155; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         
         .controls-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; justify-content: space-between; }
         select { padding: 6px; font-size: 13px; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff; }
         
         .match-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 13px; }
-        .team-box { display: flex; align-items: center; gap: 6px; width: 140px; }
+        .team-box { display: flex; align-items: center; gap: 6px; width: 120px; }
         .team-box.left { justify-content: flex-end; text-align: right; }
         .team-box.right { justify-content: flex-start; text-align: left; }
         .team-logo { width: 22px; height: 22px; object-fit: contain; }
 
-        input[type="number"] { width: 35px; text-align: center; padding: 4px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; }
-        
+        .score-inputs { display: flex; align-items: center; gap: 4px; }
+        .score-input { width: 28px; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
+
+        .choices-group { display: flex; gap: 4px; }
+        .choice-btn { background: #e2e8f0; border: none; padding: 5px 9px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; color: #334155; transition: 0.2s; }
+        .choice-btn:hover { background: #cbd5e1; }
+        .choice-btn.active-1 { background: #2563eb; color: white; }
+        .choice-btn.active-0 { background: #d97706; color: white; }
+        .choice-btn.active-2 { background: #dc2626; color: white; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #e2e8f0; padding: 5px; text-align: center; font-size: 12px; }
         th { background-color: #1e293b; color: white; }
@@ -35,12 +53,25 @@
         .ucl-konferans { background-color: #10b981 !important; color: white; }
         .dusme-hatti { background-color: #ef4444 !important; color: white; }
 
-        .btn { display: block; width: 100%; background-color: #2563eb; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px; }
+        .btn { display: block; width: 100%; background-color: #2563eb; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 10px; text-align: center; text-decoration: none; box-sizing: border-box; }
         .btn:hover { background-color: #1d4ed8; }
         .btn-green { background-color: #10b981; }
         .btn-green:hover { background-color: #059669; }
+        .btn-purple { background-color: #7c3aed; }
+        .btn-purple:hover { background-color: #6d28d9; }
+        .btn-orange { background-color: #d97706; }
+        .btn-orange:hover { background-color: #b45309; }
+
+        .game-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 10px; font-size: 14px; }
+        .clue-list { margin: 10px 0; padding-left: 20px; color: #475569; }
+        .clue-list li { margin-bottom: 6px; }
+        .game-input-row { display: flex; gap: 8px; margin-top: 15px; }
+        .game-input-row input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
         
-        /* Giriş Modalı */
+        /* DRAFT VE SİMÜLASYON KARTLARI */
+        .draft-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .draft-card:hover { background: #eff6ff; border-color: #2563eb; }
+
         #girisModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .modal-card { background: white; padding: 30px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-card input, .modal-card select { width: 100%; padding: 8px; margin-top: 10px; margin-bottom: 15px; box-sizing: border-box; }
@@ -68,74 +99,113 @@
     </div>
 
     <h1>Süper Lig Tahmin Yarışması ⚽</h1>
-    <div class="subtitle" id="hosgeldinYazisi">6 Kişilik Özel Tahmin Modülü & Lig Simülatörü</div>
+    <div class="subtitle" id="hosgeldinYazisi">Tahminler, Futbolcu Bulma & Rüya Kadro Lig Simülasyonu</div>
+
+    <!-- ÜST MENÜ SEKMELERİ -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="tabMenuTahmin" onclick="sekmeDegistir('tahmin')">🏠 Tahmin & Puan Ekranı</button>
+        <button class="tab-btn" id="tabMenuOyun" onclick="sekmeDegistir('oyun')">🕵️‍♂️ Futbolcu Bulma</button>
+        <button class="tab-btn" id="tabMenuSimulasyon" onclick="sekmeDegistir('simulasyon')">⚡ Rüya Kadro Lig Simülasyonu</button>
+    </div>
 
     <div class="main-container">
-        <!-- 1. KUTU: GERÇEK MAÇ SONUÇLARI -->
-        <div class="card">
-            <h2>
-                <span>Gerçek Maçlar / Sonuçlar</span>
-                <select id="gercekHaftaSecici" onchange="gercekHaftaDegisti()"></select>
-            </h2>
-            <div id="gercekMaclarAlani"></div>
-            <button class="btn" id="btnGercekGuncelle" onclick="gercekPuanlariHesapla()">Gerçek Puan Durumunu Güncelle</button>
-        </div>
-
-        <!-- 2. KUTU: 6 KİŞİLİK TAHMİN PANELİ -->
-        <div class="card">
-            <h2>
-                <span id="aktifProfilBaslik">Tahmin Giriş Paneli</span>
-                <span id="kilitliProfilAdi" style="font-size: 13px; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;">-</span>
-            </h2>
-            <div class="controls-row">
-                <span id="aktifProfilAdi" style="font-weight: bold; font-size: 13px; color: #2563eb;">Tahminler</span>
-                <select id="tahminHaftaSecici" onchange="tahminHaftaDegisti()"></select>
+        
+        <!-- ================= 1. BÖLÜM: TAHMİN & PUAN EKRANI ================= -->
+        <div id="alanTahmin" style="display: contents;">
+            <!-- GERÇEK MAÇ SONUÇLARI -->
+            <div class="card">
+                <h2>
+                    <span>Gerçek Maç Skorları</span>
+                    <select id="gercekHaftaSecici" onchange="gercekHaftaDegisti()"></select>
+                </h2>
+                <div id="gercekMaclarAlani"></div>
+                <button class="btn" id="btnGercekGuncelle" onclick="gercekPuanlariHesapla()">Puan Durumunu Güncelle</button>
             </div>
-            <div id="tahminMaclarAlani"></div>
-            <button class="btn btn-green" onclick="tahminleriKaydetMesaji()">Tahminleri Kaydet</button>
+
+            <!-- TAHMİN GİRİŞ PANELİ -->
+            <div class="card">
+                <h2>
+                    <span id="aktifProfilBaslik">Tahmin Giriş Paneli</span>
+                    <span id="kilitliProfilAdi" style="font-size: 13px; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;">-</span>
+                </h2>
+                <div class="controls-row">
+                    <span id="aktifProfilAdi" style="font-weight: bold; font-size: 13px; color: #2563eb;">Tahminler</span>
+                    <select id="tahminHaftaSecici" onchange="tahminHaftaDegisti()"></select>
+                </div>
+                <div id="tahminMaclarAlani"></div>
+                <button class="btn btn-green" onclick="tahminleriKaydetMesaji()">Tahminleri Kaydet</button>
+            </div>
+
+            <!-- GERÇEK PUAN DURUMU -->
+            <div class="card" style="width: 500px;">
+                <h2>Gerçek Puan Durumu</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sıra</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>Av</th><th>P</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gercekPuanTablosuBody"></tbody>
+                </table>
+            </div>
+
+            <!-- YARIŞMA LİGİ -->
+            <div class="card" style="width: 500px;">
+                <h2>Tahmin Yarışması Ligi (Puanlar)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sıra</th><th>Oyuncu</th><th>Doğru Tahmin</th><th>Toplam Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yarismaTablosuBody"></tbody>
+                </table>
+                <button class="btn" onclick="yarismaPuanlariniHesapla()">Yarışma Puanlarını Hesapla</button>
+            </div>
         </div>
 
-        <!-- 3. KUTU: GERÇEK PUAN DURUMU -->
-        <div class="card" style="width: 500px;">
-            <h2>Gerçek Puan Durumu</h2>
+        <!-- ================= 2. BÖLÜM: FUTBOLCU BULMA OYUNU ================= -->
+        <div id="alanOyun" class="card card-game">
+            <h2>
+                <span>🕵️‍♂️ Süper Lig Futbolcu Bulma Oyunu</span>
+                <select id="oyunModuSecici" onchange="oyunModuDegisti()" style="font-size: 13px; padding: 4px;">
+                    <option value="10">10 Soru (Kolay -> Zor)</option>
+                    <option value="20">20 Soru (Kolay -> Zor)</option>
+                    <option value="30">30 Soru (Kolay -> Zor)</option>
+                </select>
+            </h2>
+            <div id="oyunIcerikAlani" class="game-box"></div>
+            <button class="btn btn-purple" onclick="oyunuBaslat()">Yeni Oyun Başlat</button>
+        </div>
+
+        <!-- ================= 3. BÖLÜM: RÜYA KADRO LİG SİMÜLASYONU ================= -->
+        <div id="alanSimulasyon" class="card card-game" style="width: 650px;">
+            <h2>
+                <span>⚡ Rüya Kadro Süper Lig Simülasyonu</span>
+                <span id="simDurumBaslik" style="font-size: 13px; color: #2563eb;">Kadro Kurulmadı</span>
+            </h2>
+            <div id="simulasyonIcerikAlani" class="game-box"></div>
+        </div>
+
+        <!-- SİMÜLASYON YAN LİDERLİK TABLOSU (EN İYİ 10 SKOR) -->
+        <div id="alanSimLiderlik" class="card" style="width: 320px; display: none;">
+            <h2>🏆 En İyi 10 Skor</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Sıra</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>Av</th><th>P</th>
+                        <th>Sıra</th><th>Takım Adı</th><th>Puan</th>
                     </tr>
                 </thead>
-                <tbody id="gercekPuanTablosuBody"></tbody>
+                <tbody id="enIyiSkorlarBody"></tbody>
             </table>
+            <button class="btn btn-orange" onclick="skorlariSifirla()" style="margin-top: 15px;">Skorları Sıfırla</button>
         </div>
 
-        <!-- 4. KUTU: YARIŞMA LİGİ -->
-        <div class="card" style="width: 500px;">
-            <h2>Tahmin Yarışması Ligi (Puanlar)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Sıra</th><th>Oyuncu</th><th>Tam Skor</th><th>Fark/Sonuç</th><th>Toplam Puan</th>
-                    </tr>
-                </thead>
-                <tbody id="yarismaTablosuBody"></tbody>
-            </table>
-            <button class="btn" onclick="yarismaPuanlariniHesapla()">Yarışma Puanlarını Hesapla</button>
-        </div>
     </div>
 
     <script>
         const oyuncuIsimleri = ["Carry", "Bilimsel NoFlexs", "Atıfheist", "Lazori", "Rookie", "Misafir"];
-        
-        // Şifreler (Buradan şifreleri dilediğiniz gibi değiştirebilirsiniz)
-        const oyuncuSifreleri = {
-            0: "1234", // Carry için şifre
-            1: "nolfex123",
-            2: "atif123",
-            3: "lazori123",
-            4: "rookie123",
-            5: "misafir123"
-        };
-
+        const oyuncuSifreleri = { 0: "1234", 1: "nolfex123", 2: "atif123", 3: "lazori123", 4: "rookie123", 5: "misafir123" };
         let aktifKullaniciIndex = 0;
 
         const takimListesi = [
@@ -146,16 +216,182 @@
             "Amed Sportif Faaliyetler", "Çorum FK"
         ];
 
+        /* --- 150 FUTBOLCULUK DEV SÜPER LİG HAVUZU --- */
+        const futbolcuHavuzu = [
+            // --- SEVİYE 1: 50 KOLAY OYUNCU ---
+            { isim: "Mauro Icardi", takim: "Galatasaray", mevkii: "Forvet", uyruk: "Arjantin", yas: 33, zorluk: 1 },
+            { isim: "Edin Dzeko", takim: "Fenerbahçe", mevkii: "Forvet", uyruk: "Bosna-Hersek", yas: 40, zorluk: 1 },
+            { isim: "Ciro Immobile", takim: "Beşiktaş", mevkii: "Forvet", uyruk: "İtalya", yas: 36, zorluk: 1 },
+            { isim: "Fernando Muslera", takim: "Galatasaray", mevkii: "Kaleci", uyruk: "Uruguay", yas: 40, zorluk: 1 },
+            { isim: "Dusan Tadic", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Sırbistan", yas: 37, zorluk: 1 },
+            { isim: "Victor Osimhen", takim: "Galatasaray", mevkii: "Forvet", uyruk: "Nijerya", yas: 27, zorluk: 1 },
+            { isim: "Rafa Silva", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "Portekiz", yas: 33, zorluk: 1 },
+            { isim: "Uğurcan Çakır", takim: "Trabzonspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 30, zorluk: 1 },
+            { isim: "Barış Alper Yılmaz", takim: "Galatasaray", mevkii: "Forvet", uyruk: "Türkiye", yas: 26, zorluk: 1 },
+            { isim: "Mert Günok", takim: "Beşiktaş", mevkii: "Kaleci", uyruk: "Türkiye", yas: 37, zorluk: 1 },
+            { isim: "Dries Mertens", takim: "Galatasaray", mevkii: "Orta Saha", uyruk: "Belçika", yas: 39, zorluk: 1 },
+            { isim: "Dominik Livakovic", takim: "Fenerbahçe", mevkii: "Kaleci", uyruk: "Hırvatistan", yas: 31, zorluk: 1 },
+            { isim: "İsmail Yüksek", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 27, zorluk: 1 },
+            { isim: "Sebastian Szymanski", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Polonya", yas: 27, zorluk: 1 },
+            { isim: "Semih Kılıçsoy", takim: "Beşiktaş", mevkii: "Forvet", uyruk: "Türkiye", yas: 21, zorluk: 1 },
+            { isim: "Gedson Fernandes", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "Portekiz", yas: 27, zorluk: 1 },
+            { isim: "Edin Visca", takim: "Trabzonspor", mevkii: "Orta Saha", uyruk: "Bosna-Hersek", yas: 36, zorluk: 1 },
+            { isim: "Kerem Aktürkoğlu", takim: "Galatasaray", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 27, zorluk: 1 },
+            { isim: "Abdülkerim Bardakcı", takim: "Galatasaray", mevkii: "Defans", uyruk: "Türkiye", yas: 31, zorluk: 1 },
+            { isim: "Kaan Ayhan", takim: "Galatasaray", mevkii: "Defans", uyruk: "Türkiye", yas: 31, zorluk: 1 },
+            { isim: "Fred", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Brezilya", yas: 33, zorluk: 1 },
+            { isim: "Sofyan Amrabat", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Fas", yas: 30, zorluk: 1 },
+            { isim: "Allan Saint-Maximin", takim: "Fenerbahçe", mevkii: "Forvet", uyruk: "Fransa", yas: 29, zorluk: 1 },
+            { isim: "Mert Müldür", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 27, zorluk: 1 },
+            { isim: "Arthur Masuaku", takim: "Beşiktaş", mevkii: "Defans", uyruk: "Kongo DC", yas: 32, zorluk: 1 },
+            { isim: "Salih Uçan", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 32, zorluk: 1 },
+            { isim: "Necip Uysal", takim: "Beşiktaş", mevkii: "Defans", uyruk: "Türkiye", yas: 35, zorluk: 1 },
+            { isim: "Ozan Tufan", takim: "Trabzonspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 31, zorluk: 1 },
+            { isim: "Anthony Nwakaeme", takim: "Trabzonspor", mevkii: "Forvet", uyruk: "Nijerya", yas: 37, zorluk: 1 },
+            { isim: "Stefan Savic", takim: "Trabzonspor", mevkii: "Defans", uyruk: "Karadağ", yas: 35, zorluk: 1 },
+            { isim: "Krzysztof Piatek", takim: "İstanbul Başakşehir", mevkii: "Forvet", uyruk: "Polonya", yas: 31, zorluk: 1 },
+            { isim: "Deniz Türüç", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 33, zorluk: 1 },
+            { isim: "Berat Özdemir", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 28, zorluk: 1 },
+            { isim: "Emre Belözoğlu", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 45, zorluk: 1 },
+            { isim: "Emre Akbaba", takim: "Eyüpspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 33, zorluk: 1 },
+            { isim: "Jonjo Shelvey", takim: "Çaykur Rizespor", mevkii: "Orta Saha", uyruk: "İngiltere", yas: 34, zorluk: 1 },
+            { isim: "Okan Kocuk", takim: "Samsunspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 31, zorluk: 1 },
+            { isim: "Taylan Antalyalı", takim: "Bodrum FK", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 31, zorluk: 1 },
+            { isim: "Sinan Bolat", takim: "KVC Westerlo", mevkii: "Kaleci", uyruk: "Türkiye", yas: 37, zorluk: 1 },
+            { isim: "Gökhan Gönül", takim: "Antalyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 41, zorluk: 1 },
+            { isim: "Burak Yılmaz", takim: "Gaziantep FK", mevkii: "Forvet", uyruk: "Türkiye", yas: 41, zorluk: 1 },
+            { isim: "Volkan Demirel", takim: "Hatayspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 44, zorluk: 1 },
+            { isim: "Gabriel Sara", takim: "Galatasaray", mevkii: "Orta Saha", uyruk: "Brezilya", yas: 27, zorluk: 1 },
+            { isim: "Michy Batshuayi", takim: "Galatasaray", mevkii: "Forvet", uyruk: "Belçika", yas: 32, zorluk: 1 },
+            { isim: "Youssef En-Nesyri", takim: "Fenerbahçe", mevkii: "Forvet", uyruk: "Fas", yas: 29, zorluk: 1 },
+            { isim: "Filip Kostic", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Sırbistan", yas: 33, zorluk: 1 },
+            { isim: "Felix Uduokhai", takim: "Beşiktaş", mevkii: "Defans", uyruk: "Almanya", yas: 28, zorluk: 1 },
+            { isim: "Cher Ndour", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "İtalya", yas: 21, zorluk: 1 },
+            { isim: "Simon Banza", takim: "Trabzonspor", mevkii: "Forvet", uyruk: "Kongo DC", yas: 29, zorluk: 1 },
+            { isim: "Muhammed Cham", takim: "Trabzonspor", mevkii: "Orta Saha", uyruk: "Avusturya", yas: 25, zorluk: 1 },
+
+            // --- SEVİYE 2: 50 ORTA OYUNCU ---
+            { isim: "Enis Destan", takim: "Trabzonspor", mevkii: "Forvet", uyruk: "Türkiye", yas: 24, zorluk: 2 },
+            { isim: "Ahmet Oğuz", takim: "Konyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 33, zorluk: 2 },
+            { isim: "Carlo Holse", takim: "Samsunspor", mevkii: "Orta Saha", uyruk: "Danimarka", yas: 27, zorluk: 2 },
+            { isim: "Mamadou Fall", takim: "Kasımpaşa", mevkii: "Forvet", uyruk: "Senegal", yas: 34, zorluk: 2 },
+            { isim: "Gianni Bruno", takim: "Eyüpspor", mevkii: "Forvet", uyruk: "Belçika", yas: 35, zorluk: 2 },
+            { isim: "Loide Augusto", takim: "Alanyaspor", mevkii: "Forvet", uyruk: "Angola", yas: 26, zorluk: 2 },
+            { isim: "Florian Loshaj", takim: "Kocaelispor", mevkii: "Orta Saha", uyruk: "Kosova", yas: 30, zorluk: 2 },
+            { isim: "Anthony Musah", takim: "Göztepe", mevkii: "Forvet", uyruk: "Gana", yas: 24, zorluk: 2 },
+            { isim: "Khetag Pliev", takim: "Gaziantep FK", mevkii: "Defans", uyruk: "Rusya", yas: 27, zorluk: 2 },
+            { isim: "Ali Şaşal Vural", takim: "Sivasspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 35, zorluk: 2 },
+            { isim: "Rey Manaj", takim: "Sivasspor", mevkii: "Forvet", uyruk: "Arnavutluk", yas: 29, zorluk: 2 },
+            { isim: "Mame Thiam", takim: "Eyüpspor", mevkii: "Forvet", uyruk: "Senegal", yas: 33, zorluk: 2 },
+            { isim: "Nuno Sequeira", takim: "Pendikspor", mevkii: "Defans", uyruk: "Portekiz", yas: 35, zorluk: 2 },
+            { isim: "Stelios Kitsiou", takim: "Ankaragücü", mevkii: "Defans", uyruk: "Yunanistan", yas: 32, zorluk: 2 },
+            { isim: "Garry Rodrigues", takim: "Sivasspor", mevkii: "Forvet", uyruk: "Yeşil Burun Adaları", yas: 35, zorluk: 2 },
+            { isim: "Aleksandar Cicaldau", takim: "Galatasaray", mevkii: "Orta Saha", uyruk: "Romanya", yas: 28, zorluk: 2 },
+            { isim: "Taylan Utku", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 23, zorluk: 2 },
+            { isim: "Rıdvan Yılmaz", takim: "Beşiktaş", mevkii: "Defans", uyruk: "Türkiye", yas: 25, zorluk: 2 },
+            { isim: "Emre Demir", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 22, zorluk: 2 },
+            { isim: "Serdar Aziz", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 35, zorluk: 2 },
+            { isim: "İrfan Can Eğribayat", takim: "Fenerbahçe", mevkii: "Kaleci", uyruk: "Türkiye", yas: 27, zorluk: 2 },
+            { isim: "Rodrigo Becao", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Brezilya", yas: 30, zorluk: 2 },
+            { isim: "Jayden Oosterwolde", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Hollanda", yas: 24, zorluk: 2 },
+            { isim: "Bartuğ Elmaz", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 23, zorluk: 2 },
+            { isim: "Emre Mor", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 28, zorluk: 2 },
+            { isim: "Cengiz Ünder", takim: "Fenerbahçe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 28, zorluk: 2 },
+            { isim: "Samet Akaydin", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 32, zorluk: 2 },
+            { isim: "Rachid Ghezzal", takim: "Çaykur Rizespor", mevkii: "Orta Saha", uyruk: "Cezayir", yas: 33, zorluk: 2 },
+            { isim: "Vincent Aboubakar", takim: "Hatayspor", mevkii: "Forvet", uyruk: "Kamerun", yas: 34, zorluk: 2 },
+            { isim: "Joao Mario", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "Portekiz", yas: 33, zorluk: 2 },
+            { isim: "Ersin Destanoğlu", takim: "Beşiktaş", mevkii: "Kaleci", uyruk: "Türkiye", yas: 25, zorluk: 2 },
+            { isim: "Tayyip Talha Sanuç", takim: "Beşiktaş", mevkii: "Defans", uyruk: "Türkiye", yas: 26, zorluk: 2 },
+            { isim: "Demba Ba", takim: "Eyüpspor", mevkii: "Forvet", uyruk: "Senegal", yas: 40, zorluk: 2 },
+            { isim: "Eren Elmalı", takim: "Trabzonspor", mevkii: "Defans", uyruk: "Türkiye", yas: 25, zorluk: 2 },
+            { isim: "Serdar Saatçı", takim: "Trabzonspor", mevkii: "Defans", uyruk: "Türkiye", yas: 23, zorluk: 2 },
+            { isim: "Batuhan Şen", takim: "Gaziantep FK", mevkii: "Kaleci", uyruk: "Türkiye", yas: 27, zorluk: 2 },
+            { isim: "Mustafa Eskihellaç", takim: "Gaziantep FK", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 28, zorluk: 2 },
+            { isim: "Nuno Da Costa", takim: "Kasımpaşa", mevkii: "Forvet", uyruk: "Yeşil Burun Adaları", yas: 35, zorluk: 2 },
+            { isim: "Haris Hajradinovic", takim: "Kasımpaşa", mevkii: "Orta Saha", uyruk: "Bosna-Hersek", yas: 32, zorluk: 2 },
+            { isim: "Claudio Winck", takim: "Kasımpaşa", mevkii: "Defans", uyruk: "Brezilya", yas: 32, zorluk: 2 },
+            { isim: "Valentin Eysseric", takim: "Fatih Karagümrük", mevkii: "Orta Saha", uyruk: "Fransa", yas: 33, zorluk: 2 },
+            { isim: "Levent Mercan", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 25, zorluk: 2 },
+            { isim: "Gökhan Sazdağı", takim: "Kayserispor", mevkii: "Defans", uyruk: "Türkiye", yas: 31, zorluk: 2 },
+            { isim: "Mehdi Bourabia", takim: "Kayserispor", mevkii: "Orta Saha", uyruk: "Fas", yas: 34, zorluk: 2 },
+            { isim: "Dimitrios Kolovetsios", takim: "Kayserispor", mevkii: "Defans", uyruk: "Yunanistan", yas: 34, zorluk: 2 },
+            { isim: "Ali Karimi", takim: "Kayserispor", mevkii: "Orta Saha", uyruk: "İran", yas: 32, zorluk: 2 },
+            { isim: "Stephane Bahoken", takim: "Kayserispor", mevkii: "Forvet", uyruk: "Kamerun", yas: 33, zorluk: 2 },
+            { isim: "Bilal Bayazit", takim: "Kayserispor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 27, zorluk: 2 },
+            { isim: "Ognjen Ozegovic", takim: "Konyaspor", mevkii: "Forvet", uyruk: "Sırbistan", yas: 32, zorluk: 2 },
+            { isim: "Guilherme Sitya", takim: "Konyaspor", mevkii: "Defans", uyruk: "Brezilya", yas: 36, zorluk: 2 },
+
+            // --- SEVİYE 3: 50 ZOR OYUNCU ---
+            { isim: "Ndao", takim: "Konyaspor", mevkii: "Orta Saha", uyruk: "Senegal", yas: 29, zorluk: 3 },
+            { isim: "Danijel Aleksic", takim: "Konyaspor", mevkii: "Orta Saha", uyruk: "Sırbistan", yas: 34, zorluk: 3 },
+            { isim: "Emmanuel Boateng", takim: "Konyaspor", mevkii: "Orta Saha", uyruk: "Gana", yas: 30, zorluk: 3 },
+            { isim: "Adil Demirbağ", takim: "Konyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 28, zorluk: 3 },
+            { isim: "Ufuk Ersoy", takim: "Konyaspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 24, zorluk: 3 },
+            { isim: "Ahmet Sağat", takim: "Çorum FK", mevkii: "Forvet", uyruk: "Türkiye", yas: 29, zorluk: 3 },
+            { isim: "Ahmet İlhan Özek", takim: "Gençlerbirliği", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 38, zorluk: 3 },
+            { isim: "Melih İbrahimoğlu", takim: "Adanaspor", mevkii: "Orta Saha", uyruk: "Avusturya", yas: 25, zorluk: 3 },
+            { isim: "Metehan Baltacı", takim: "Galatasaray", mevkii: "Defans", uyruk: "Türkiye", yas: 23, zorluk: 3 },
+            { isim: "Efe Akman", takim: "Galatasaray", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 20, zorluk: 3 },
+            { isim: "Hamza Akman", takim: "Sønderjyske", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Yusuf Akçiçek", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 20, zorluk: 3 },
+            { isim: "Zeki Dursun", takim: "Fenerbahçe", mevkii: "Defans", uyruk: "Türkiye", yas: 22, zorluk: 3 },
+            { isim: "Mustafa Hekimoğlu", takim: "Beşiktaş", mevkii: "Forvet", uyruk: "Türkiye", yas: 19, zorluk: 3 },
+            { isim: "Yakup Arda Kılıç", takim: "Beşiktaş", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Salih Malkoçoğlu", takim: "Trabzonspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Boran Başkan", takim: "Trabzonspor", mevkii: "Forvet", uyruk: "Türkiye", yas: 22, zorluk: 3 },
+            { isim: "Alperen Babacan", takim: "Ankaragücü", mevkii: "Defans", uyruk: "Türkiye", yas: 28, zorluk: 3 },
+            { isim: "Taha Altıkardeş", takim: "Göztepe", mevkii: "Defans", uyruk: "Türkiye", yas: 22, zorluk: 3 },
+            { isim: "İzzet Furkan Malak", takim: "Göztepe", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Lobjanidze", takim: "Hatayspor", mevkii: "Orta Saha", uyruk: "Gürcistan", yas: 31, zorluk: 3 },
+            { isim: "Kamil Ahmet Çörekçi", takim: "Hatayspor", mevkii: "Defans", uyruk: "Türkiye", yas: 34, zorluk: 3 },
+            { isim: "Cemali Sertel", takim: "Hatayspor", mevkii: "Defans", uyruk: "Türkiye", yas: 26, zorluk: 3 },
+            { isim: "Erce Kardeşler", takim: "Hatayspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 32, zorluk: 3 },
+            { isim: "Joelson Fernandes", takim: "Hatayspor", mevkii: "Orta Saha", uyruk: "Portekiz", yas: 23, zorluk: 3 },
+            { isim: "Ousmane Ba", takim: "Erzurumspor FK", mevkii: "Kaleci", uyruk: "Senegal", yas: 23, zorluk: 3 },
+            { isim: "Kaan Baysal", takim: "Amed SF", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 29, zorluk: 3 },
+            { isim: "Oktay Aydın", takim: "Amed SF", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 25, zorluk: 3 },
+            { isim: "Adama Traore", takim: "Amed SF", mevkii: "Orta Saha", uyruk: "Mali", yas: 31, zorluk: 3 },
+            { isim: "Britt Assombalonga", takim: "Antalyaspor", mevkii: "Forvet", uyruk: "Kongo DC", yas: 33, zorluk: 3 },
+            { isim: "Sander van de Streek", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Hollanda", yas: 33, zorluk: 3 },
+            { isim: "Erdoğan Yeşilyurt", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 32, zorluk: 3 },
+            { isim: "Veysel Sarı", takim: "Antalyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 37, zorluk: 3 },
+            { isim: "Bünyamin Balcı", takim: "Antalyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 25, zorluk: 3 },
+            { isim: "Ataberk Dadakdeniz", takim: "Antalyaspor", mevkii: "Kaleci", uyruk: "Türkiye", yas: 26, zorluk: 3 },
+            { isim: "Bahadır Öztürk", takim: "Antalyaspor", mevkii: "Defans", uyruk: "Türkiye", yas: 28, zorluk: 3 },
+            { isim: "Jakub Kaluzinski", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Polonya", yas: 23, zorluk: 3 },
+            { isim: "Sam Larsson", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "İsveç", yas: 33, zorluk: 3 },
+            { isim: "Emre Uzun", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Mevlüt Han Ekelik", takim: "Antalyaspor", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 22, zorluk: 3 },
+            { isim: "Amar Gerxhaliu", takim: "Antalyaspor", mevkii: "Defans", uyruk: "Kosova", yas: 24, zorluk: 3 },
+            { isim: "Deniz Dilmen", takim: "İstanbul Başakşehir", mevkii: "Kaleci", uyruk: "Türkiye", yas: 21, zorluk: 3 },
+            { isim: "Hamza Güreler", takim: "İstanbul Başakşehir", mevkii: "Defans", uyruk: "Türkiye", yas: 20, zorluk: 3 },
+            { isim: "Efe Koyuncu", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 19, zorluk: 3 },
+            { isim: "Ömer Ali Şahiner", takim: "İstanbul Başakşehir", mevkii: "Defans", uyruk: "Türkiye", yas: 34, zorluk: 3 },
+            { isim: "Lucas Lima", takim: "İstanbul Başakşehir", mevkii: "Defans", uyruk: "Brezilya", yas: 34, zorluk: 3 },
+            { isim: "Jerome Opoku", takim: "İstanbul Başakşehir", mevkii: "Defans", uyruk: "Gana", yas: 27, zorluk: 3 },
+            { isim: "Onur Ergün", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Türkiye", yas: 33, zorluk: 3 },
+            { isim: "Matchoi Djalo", takim: "İstanbul Başakşehir", mevkii: "Orta Saha", uyruk: "Gine-Bissau", yas: 23, zorluk: 3 },
+            { isim: "Gürkan Başkan", takim: "İstanbul Başakşehir", mevkii: "Defans", uyruk: "Türkiye", yas: 21, zorluk: 3 }
+        ];
+
+        let aktifOyunSoruSayisi = 10;
+        let mevcutSoruIndex = 0;
+        let dogruBilinenSayisi = 0;
+        let secilenOyuncuListesi = [];
+        let aktifGizliFutbolcu = null;
+
+        /* RÜYA KADRO SİMÜLASYON DEĞİŞKENLERİ */
+        let userKadro = { kaleci: null, defans: null, ortaSaha: null, forvet: null };
+        let draftAsamasi = "kaleci"; // kaleci, defans, ortasaha, forvet, bitti
+        let draftAdaylari = [];
+        let simFikstur = {};
+        let simPuanDurumu = {};
+        let aktifSimHafta = 1;
+        let enIyiSkorlarListesi = [];
+
         function logoGetir(takimAdi) {
-            let dosyaAdi = takimAdi
-                .toLowerCase()
-                .replace(/ü/g, 'u')
-                .replace(/ö/g, 'o')
-                .replace(/ş/g, 's')
-                .replace(/ç/g, 'c')
-                .replace(/ğ/g, 'g')
-                .replace(/ı/g, 'i')
-                .replace(/ /g, '-');
+            let dosyaAdi = takimAdi.toLowerCase().replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ /g, '-');
             return `logos/${dosyaAdi}.png`;
         }
 
@@ -163,7 +399,7 @@
         let oyuncuTahminleri = [{}, {}, {}, {}, {}, {}];
 
         function verileriYukle() {
-            let versiyon = "v4_sifreli_sistem";
+            let versiyon = "v12_ruya_kadro";
             if (localStorage.getItem("superlig_versiyon") !== versiyon) {
                 localStorage.clear();
                 localStorage.setItem("superlig_versiyon", versiyon);
@@ -171,25 +407,59 @@
 
             let kayitliGercek = localStorage.getItem("superlig_gercekFikstur");
             let kayitliTahmin = localStorage.getItem("superlig_oyuncuTahminleri");
+            let kayitliSkorlar = localStorage.getItem("superlig_enIyiSkorlar");
 
-            if (kayitliGercek) {
-                gercekFikstur = JSON.parse(kayitliGercek);
-            } else {
-                fiksturOlustur(gercekFikstur);
+            if (kayitliGercek) gercekFikstur = JSON.parse(kayitliGercek);
+            else fiksturOlustur(gercekFikstur);
+
+            if (kayitliTahmin) oyuncuTahminleri = JSON.parse(kayitliTahmin);
+            else {
+                for(let p = 0; p < 6; p++) oyuncuTahminleri[p] = JSON.parse(JSON.stringify(gercekFikstur));
             }
 
-            if (kayitliTahmin) {
-                oyuncuTahminleri = JSON.parse(kayitliTahmin);
-            } else {
-                for(let p = 0; p < 6; p++) {
-                    oyuncuTahminleri[p] = JSON.parse(JSON.stringify(gercekFikstur));
-                }
-            }
+            if (kayitliSkorlar) enIyiSkorlarListesi = JSON.parse(kayitliSkorlar);
         }
 
         function verileriKaydet() {
             localStorage.setItem("superlig_gercekFikstur", JSON.stringify(gercekFikstur));
             localStorage.setItem("superlig_oyuncuTahminleri", JSON.stringify(oyuncuTahminleri));
+            localStorage.setItem("superlig_enIyiSkorlar", JSON.stringify(enIyiSkorlarListesi));
+        }
+
+        /* SEKME GEÇİŞ FONKSİYONU */
+        function sekmeDegistir(tur) {
+            let alanTahmin = document.getElementById("alanTahmin");
+            let alanOyun = document.getElementById("alanOyun");
+            let alanSimulasyon = document.getElementById("alanSimulasyon");
+            let alanSimLiderlik = document.getElementById("alanSimLiderlik");
+
+            let btnTahmin = document.getElementById("tabMenuTahmin");
+            let btnOyun = document.getElementById("tabMenuOyun");
+            let btnSimulasyon = document.getElementById("tabMenuSimulasyon");
+
+            // Tümünü kapat
+            alanTahmin.style.display = "none";
+            alanOyun.style.display = "none";
+            alanSimulasyon.style.display = "none";
+            alanSimLiderlik.style.display = "none";
+            btnTahmin.classList.remove("active");
+            btnOyun.classList.remove("active");
+            btnSimulasyon.classList.remove("active");
+
+            if(tur === 'tahmin') {
+                alanTahmin.style.display = "contents";
+                btnTahmin.classList.add("active");
+            } else if(tur === 'oyun') {
+                alanOyun.style.display = "block";
+                btnOyun.classList.add("active");
+                oyunuBaslat();
+            } else if(tur === 'simulasyon') {
+                alanSimulasyon.style.display = "block";
+                alanSimLiderlik.style.display = "block";
+                btnSimulasyon.classList.add("active");
+                simulasyonEkraniniGuncelle();
+                enIyiSkorlariGoster();
+            }
         }
 
         function sistemeGirisYap() {
@@ -207,218 +477,25 @@
 
         function fiksturOlustur(hedefFikstur) {
             let totalHafta = 17;
-
-            targetFikstur1:
             hedefFikstur[1] = [
-                { ev: "Galatasaray", dep: "Çorum FK", evSkor: "2", depSkor: "2" },
-                { ev: "Konyaspor", dep: "Çaykur Rizespor", evSkor: "0", depSkor: "1" },
-                { ev: "Kasımpaşa", dep: "Trabzonspor", evSkor: "1", depSkor: "1" },
-                { ev: "Gaziantep FK", dep: "Alanyaspor", evSkor: "1", depSkor: "1" },
-                { ev: "Gençlerbirliği", dep: "Fenerbahçe", evSkor: "2", depSkor: "1" },
-                { ev: "İstanbul Başakşehir", dep: "Kocaelispor", evSkor: "2", depSkor: "0" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Erzurumspor FK", evSkor: "3", depSkor: "0" },
-                { ev: "Beşiktaş", dep: "Eyüpspor", evSkor: "1", depSkor: "0" },
+                { ev: "Galatasaray", dep: "Çorum FK", evSkor: "", depSkor: "" },
+                { ev: "Konyaspor", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
+                { ev: "Kasımpaşa", dep: "Trabzonspor", evSkor: "", depSkor: "" },
+                { ev: "Gaziantep FK", dep: "Alanyaspor", evSkor: "", depSkor: "" },
+                { ev: "Gençlerbirliği", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
+                { ev: "İstanbul Başakşehir", dep: "Kocaelispor", evSkor: "", depSkor: "" },
+                { ev: "Amed Sportif Faaliyetler", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
+                { ev: "Beşiktaş", dep: "Eyüpspor", evSkor: "", depSkor: "" },
                 { ev: "Samsunspor", dep: "Göztepe", evSkor: "", depSkor: "" }
             ];
-
-            hedefFikstur[2] = [
-                { ev: "Erzurumspor FK", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[3] = [
-                { ev: "Gençlerbirliği", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Galatasaray", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Kocaelispor", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Çorum FK", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[4] = [
-                { ev: "Çorum FK", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Erzurumspor FK", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Kasımpaşa", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Alanyaspor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[5] = [
-                { ev: "Galatasaray", dep: "Kocaelispor", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Trabzonspor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[6] = [
-                { ev: "Erzurumspor FK", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Kasımpaşa", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Alanyaspor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[7] = [
-                { ev: "Beşiktaş", dep: "Kocaelispor", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Galatasaray", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Trabzonspor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[8] = [
-                { ev: "Kasımpaşa", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Erzurumspor FK", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Gaziantep FK", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[9] = [
-                { ev: "Samsunspor", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Galatasaray", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[10] = [
-                { ev: "Gençlerbirliği", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Kasımpaşa", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Erzurumspor FK", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Göztepe", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[11] = [
-                { ev: "Galatasaray", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[12] = [
-                { ev: "Galatasaray", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Erzurumspor FK", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Kasımpaşa", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Gaziantep FK", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[13] = [
-                { ev: "Gaziantep FK", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Kocaelispor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[14] = [
-                { ev: "Erzurumspor FK", dep: "Kocaelispor", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Samsunspor", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Galatasaray", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "Kasımpaşa", dep: "Göztepe", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[15] = [
-                { ev: "Erzurumspor FK", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Fenerbahçe", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "Samsunspor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[16] = [
-                { ev: "Kasımpaşa", dep: "Fenerbahçe", evSkor: "", depSkor: "" },
-                { ev: "Konyaspor", dep: "Eyüpspor", evSkor: "", depSkor: "" },
-                { ev: "Samsunspor", dep: "Gaziantep FK", evSkor: "", depSkor: "" },
-                { ev: "Gençlerbirliği", dep: "Çorum FK", evSkor: "", depSkor: "" },
-                { ev: "İstanbul Başakşehir", dep: "Erzurumspor FK", evSkor: "", depSkor: "" },
-                { ev: "Beşiktaş", dep: "Çaykur Rizespor", evSkor: "", depSkor: "" },
-                { ev: "Amed Sportif Faaliyetler", dep: "Göztepe", evSkor: "", depSkor: "" },
-                { ev: "Galatasaray", dep: "Alanyaspor", evSkor: "", depSkor: "" },
-                { ev: "Trabzonspor", dep: "Kocaelispor", evSkor: "", depSkor: "" }
-            ];
-
-            hedefFikstur[17] = [
-                { ev: "Fenerbahçe", dep: "Amed Sportif Faaliyetler", evSkor: "", depSkor: "" },
-                { ev: "Kocaelispor", dep: "Kasımpaşa", evSkor: "", depSkor: "" },
-                { ev: "Alanyaspor", dep: "İstanbul Başakşehir", evSkor: "", depSkor: "" },
-                { ev: "Çaykur Rizespor", dep: "Gençlerbirliği", evSkor: "", depSkor: "" },
-                { ev: "Gaziantep FK", dep: "Galatasaray", evSkor: "", depSkor: "" },
-                { ev: "Çorum FK", dep: "Konyaspor", evSkor: "", depSkor: "" },
-                { ev: "Göztepe", dep: "Beşiktaş", evSkor: "", depSkor: "" },
-                { ev: "Erzurumspor FK", dep: "Trabzonspor", evSkor: "", depSkor: "" },
-                { ev: "Eyüpspor", dep: "Samsunspor", evSkor: "", depSkor: "" }
-            ];
-
             for (let hafta = 1; hafta <= totalHafta; hafta++) {
                 let ikinciDevreHafta = hafta + totalHafta;
-                let birinciDevreMaclari = hedefFikstur[hafta];
+                let birinciDevreMaclari = hedefFikstur[hafta] || hedefFikstur[1];
+                if(hafta > 1) {
+                    hedefFikstur[hafta] = JSON.parse(JSON.stringify(birinciDevreMaclari));
+                }
                 let yeniHaftaMaclari = [];
-
-                birinciDevreMaclari.forEach(mac => {
+                hedefFikstur[hafta].forEach(mac => {
                     yeniHaftaMaclari.push({ ev: mac.dep, dep: mac.ev, evSkor: "", depSkor: "" });
                 });
                 hedefFikstur[ikinciDevreHafta] = yeniHaftaMaclari;
@@ -427,22 +504,18 @@
 
         function arayuzuBaslat() {
             verileriYukle();
-            
-            // Kullanıcı arayüzünü aktif kullaniciya göre sabitle
             let aktifIsim = oyuncuIsimleri[aktifKullaniciIndex];
             document.getElementById("kilitliProfilAdi").innerText = `Oturum: ${aktifIsim}`;
             document.getElementById("aktifProfilAdi").innerText = `${aktifIsim} Tahminleri`;
 
             let gSecici = document.getElementById("gercekHaftaSecici");
             let tSecici = document.getElementById("tahminHaftaSecici");
-            gSecici.innerHTML = "";
-            tSecici.innerHTML = "";
+            gSecici.innerHTML = ""; tSecici.innerHTML = "";
             for (let h = 1; h <= 34; h++) {
                 gSecici.innerHTML += `<option value="${h}">${h}. Hafta</option>`;
                 tSecici.innerHTML += `<option value="${h}">${h}. Hafta</option>`;
             }
 
-            // Sadece Carry gerçek maçları güncelleyebilir, diğerlerinde inputlar kilitlenir
             if (aktifKullaniciIndex !== 0) {
                 document.getElementById("btnGercekGuncelle").style.display = "none";
             }
@@ -453,13 +526,368 @@
             yarismaPuanlariniHesapla();
         }
 
+        // --- FUTBOLCU BULMA OYUNU MANTIĞI ---
+        function oyunModuDegisti() {
+            aktifOyunSoruSayisi = Number(document.getElementById("oyunModuSecici").value);
+            oyunuBaslat();
+        }
+
+        function oyunuBaslat() {
+            mevcutSoruIndex = 0;
+            dogruBilinenSayisi = 0;
+            
+            let siraliHavuz = [...futbolcuHavuzu].sort((a, b) => {
+                if (a.zorluk !== b.zorluk) return a.zorluk - b.zorluk;
+                return 0.5 - Math.random();
+            });
+
+            secilenOyuncuListesi = siraliHavuz.slice(0, aktifOyunSoruSayisi);
+            siradakiSoruyuGetir();
+        }
+
+        function siradakiSoruyuGetir() {
+            if (mevcutSoruIndex >= secilenOyuncuListesi.length) {
+                document.getElementById("oyunIcerikAlani").innerHTML = `
+                    <div style="text-align: center; padding: 25px;">
+                        <h3 style="color: #10b981; font-size: 20px;">🎉 Oyun Bitti!</h3>
+                        <p style="font-size: 15px;">Toplam <b>${aktifOyunSoruSayisi}</b> sorudan <b>${dogruBilinenSayisi}</b> tanesini doğru bildin!</p>
+                        <button class="btn btn-purple" onclick="oyunuBaslat()" style="margin-top:15px; width: 200px; margin-left: auto; margin-right: auto;">Tekrar Oyna</button>
+                    </div>
+                `;
+                return;
+            }
+
+            aktifGizliFutbolcu = secilenOyuncuListesi[mevcutSoruIndex];
+            
+            let zorlukMetni = "🟢 Kolay Seviye";
+            if (aktifGizliFutbolcu.zorluk === 2) zorlukMetni = "🟡 Orta Seviye";
+            if (aktifGizliFutbolcu.zorluk === 3) zorlukMetni = "🔴 Zor Seviye";
+
+            let alan = document.getElementById("oyunIcerikAlani");
+            alan.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-weight: bold; color: #1e293b; font-size: 14px;">Soru ${mevcutSoruIndex + 1} / ${aktifOyunSoruSayisi} (${zorlukMetni})</span>
+                    <span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Doğru: ${dogruBilinenSayisi}</span>
+                </div>
+                <p style="margin: 6px 0; font-weight: 600; color: #475569; font-size: 15px;">Bu Süper Lig futbolcusu kim?</p>
+                <ul class="clue-list">
+                    <li><b>Mevkii:</b> ${aktifGizliFutbolcu.mevkii}</li>
+                    <li><b>Uyruk:</b> ${aktifGizliFutbolcu.uyruk}</li>
+                    <li><b>Oynadığı Takım:</b> ${aktifGizliFutbolcu.takim}</li>
+                    <li><b>Yaş:</b> ${aktifGizliFutbolcu.yas}</li>
+                </ul>
+                <div class="game-input-row">
+                    <input type="text" id="oyuncuTahminInput" placeholder="Futbolcu adı yazın..." onkeypress="if(event.key === 'Enter') tahminKontrolEt()">
+                    <button class="btn" style="margin-top:0; width: 110px;" onclick="tahminKontrolEt()">Tahmin Et</button>
+                </div>
+                <div id="oyunMesaj" style="margin-top: 12px; font-size: 13px; font-weight: bold; text-align: center;"></div>
+            `;
+        }
+
+        function tahminKontrolEt() {
+            let girilenDeger = document.getElementById("oyuncuTahminInput").value.trim().toLowerCase();
+            let gercekAd = aktifGizliFutbolcu.isim.toLowerCase();
+            let mesajAlan = document.getElementById("oyunMesaj");
+
+            if (gercekAd.includes(girilenDeger) && girilenDeger.length > 2) {
+                dogruBilinenSayisi++;
+                mesajAlan.style.color = "#10b981";
+                mesajAlan.innerText = `Tebrikler! Doğru cevap: ${aktifGizliFutbolcu.isim} ⚽`;
+                setTimeout(() => {
+                    mevcutSoruIndex++;
+                    siradakiSoruyuGetir();
+                }, 1500);
+            } else {
+                mesajAlan.style.color = "#dc2626";
+                mesajAlan.innerText = `Yanlış! Doğru oyuncu: ${aktifGizliFutbolcu.isim}`;
+                setTimeout(() => {
+                    mevcutSoruIndex++;
+                    siradakiSoruyuGetir();
+                }, 1800);
+            }
+        }
+
+        // =========================================================
+        // --- RÜYA KADRO SÜPER LİG SİMÜLASYONU MANTIĞI ---
+        // =========================================================
+        function yeniSimulasyonBaslat() {
+            userKadro = { kaleci: null, defans: null, ortaSaha: null, forvet: null };
+            draftAsamasi = "kaleci";
+            aktifSimHafta = 1;
+            simPuanDurumu = {};
+            simFikstur = {};
+            simulasyonEkraniniGuncelle();
+        }
+
+        function simulasyonEkraniniGuncelle() {
+            let alan = document.getElementById("simulasyonIcerikAlani");
+            let baslik = document.getElementById("simDurumBaslik");
+
+            if (draftAsamasi !== "bitti") {
+                baslik.innerText = `Kadro Kurulumu (${draftAsamasi.toUpperCase()})`;
+                
+                // Adayları belirle
+                let mevkiiFiltre = "";
+                if (draftAsamasi === "kaleci") mevkiiFiltre = "Kaleci";
+                else if (draftAsamasi === "defans") mevkiiFiltre = "Defans";
+                else if (draftAsamasi === "ortaSaha") mevkiiFiltre = "Orta Saha";
+                else if (draftAsamasi === "forvet") mevkiiFiltre = "Forvet";
+
+                let uygunlar = futbolcuHavuzu.filter(f => f.mevkii === mevkiiFiltre);
+                uygunlar.sort(() => 0.5 - Math.random());
+                draftAdaylari = uygunlar.slice(0, 3);
+
+                let html = `
+                    <p style="font-weight: bold; color: #1e293b; margin-bottom: 10px;">Lütfen kadronuz için bir <b>${mevkiiFiltre}</b> seçin:</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                `;
+
+                draftAdaylariforEachCustom(draftAdaylari, (oyuncu, idx) => {
+                    html += `
+                        <div class="draft-card" onclick="oyuncuSecildi('${mevkiiFiltre}', ${idx})">
+                            <div>
+                                <b style="font-size: 15px; color: #2563eb;">${oyuncu.isim}</b>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Takım: ${oyuncu.takim} | Uyruk: ${oyuncu.uyruk} | Yaş: ${oyuncu.yas}</div>
+                            </div>
+                            <button class="btn" style="width: 90px; margin-top:0;">Seç</button>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                
+                // Mevcut kadro özeti
+                html += `
+                    <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13px; color: #475569;">
+                        <b>Mevcut Kadronuz:</b> 
+                        GK: ${userKadro.kaleci ? userKadro.kaleci.isim : '-'} | 
+                        DEF: ${userKadro.defans ? userKadro.defans.isim : '-'} | 
+                        OS: ${userKadro.ortaSaha ? userKadro.ortaSaha.isim : '-'} | 
+                        FW: ${userKadro.forvet ? userKadro.forvet.isim : '-'}
+                    </div>
+                `;
+                alan.innerHTML = html;
+
+            } else {
+                // Lig Simülasyon Ekranı
+                baslik.innerText = `Sezon Devam Ediyor (Hafta: ${aktifSimHafta} / 34)`;
+                
+                if (aktifSimHafta > 34) {
+                    // Sezon bitti, skoru kaydet ve göster
+                    skoruListeyeKaydet();
+                    alan.innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <h3 style="color: #10b981; font-size: 20px;">🏆 Sezon Tamamlandı!</h3>
+                            <p style="font-size: 15px;">Kullanıcı Takımınızın Toplam Puanı: <b>${simPuanDurumu["Kullanıcı Takımı"] ? simPuanDurumu["Kullanıcı Takımı"].p : 0}</b></p>
+                            <button class="btn btn-purple" onclick="yeniSimulasyonBaslat()" style="margin-top:15px; width: 220px; margin-left:auto; margin-right:auto;">Yeni Kadro & Sezon Başlat</button>
+                        </div>
+                    `;
+                    enIyiSkorlariGoster();
+                    return;
+                }
+
+                let html = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-weight: bold; font-size: 14px; color: #1e293b;">📅 ${aktifSimHafta}. Hafta Maçları</span>
+                        <button class="btn btn-green" style="width: 140px; margin-top:0; padding: 6px;" onclick="haftayiSimuleEt()">Haftayı Simüle Et</button>
+                    </div>
+                    <div style="max-height: 220px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; background: #fff; margin-bottom: 15px;">
+                `;
+
+                simFikstur[aktifSimHafta].forEach(m => {
+                    html += `
+                        <div class="match-row" style="margin-bottom: 6px;">
+                            <div class="team-box left"><span>${m.ev}</span></div>
+                            <div style="font-weight: bold; font-size: 13px; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">
+                                ${m.evSkor !== "" ? m.evSkor + " - " + m.depSkor : "vs"}
+                            </div>
+                            <div class="team-box right"><span>${m.dep}</span></div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+
+                // Puan Durumu Tablosu
+                html += `
+                    <h3 style="font-size: 14px; margin-bottom: 5px; color: #334155;">Lig Puan Durumu</h3>
+                    <div style="max-height: 220px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr><th>Sıra</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>P</th></tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                let siraliTakimlar = Object.keys(simPuanDurumu).sort((a,b) => (simPuanDurumu[b].p - simPuanDurumu[a].p) || ((simPuanDurumu[b].a - simPuanDurumu[b].y) - (simPuanDurumu[a].a - simPuanDurumu[a].y)));
+                
+                siraliTakimlar.forEach((t, index) => {
+                    let s = simPuanDurumu[t];
+                    let isUser = (t === "Kullanıcı Takımı");
+                    html += `
+                        <tr style="${isUser ? 'background: #eff6ff; font-weight: bold;' : ''}">
+                            <td>${index + 1}</td>
+                            <td>${t}</td>
+                            <td>${s.o}</td><td>${s.g}</td><td>${s.b}</td><td>${s.m}</td><td><b>${s.p}</b></td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+                alan.innerHTML = html;
+            }
+        }
+
+        function draftAdaylariforEachCustom(list, callback) {
+            list.forEach((item, index) => callback(item, index));
+        }
+
+        function oyuncuSecildi(mevkiiFiltre, idx) {
+            let secilen = draftAdaylari[idx];
+            if (mevkiiFiltre === "Kaleci") {
+                userKadro.kaleci = secilen;
+                draftAsamasi = "defans";
+            } else if (mevkiiFiltre === "Defans") {
+                userKadro.defans = secilen;
+                draftAsamasi = "ortaSaha";
+            } else if (mevkiiFiltre === "Orta Saha") {
+                userKadro.ortaSaha = secilen;
+                draftAsamasi = "forvet";
+            } else if (mevkiiFiltre === "Forvet") {
+                userKadro.forvet = secilen;
+                draftAsamasi = "bitti";
+                simulasyonLiginiKur();
+            }
+            simulasyonEkraniniGuncelle();
+        }
+
+        function simulasyonLiginiKur() {
+            // 1 Kullanıcı Takımı + Kalan havuzdan seçilen 17 yapay zeka takımı (veya sabit 17 takım ismi)
+            let tumSimTakimlar = ["Kullanıcı Takımı", "Aslanlar FK", "Kanaryalar SK", "Kartallar Gençlik", "Fırtına Spor", "Anadolu Yıldızları", "Başkent Gücü", "Ege Martıls", "Toroslar FK", "Şimşekler SK", "Boğaziçi FK", "Körfez Gücü", "Dadaşlar SK", "Güney Ateşi", "Mezopotamya FK", "Kocatepe Spor", "Yeşilova SK", "Ovagücü FK"];
+            
+            simPuanDurumu = {};
+            tumSimTakimlar.forEach(t => simPuanDurumu[t] = { o:0, g:0, b:0, m:0, a:0, y:0, p:0 });
+
+            // 34 haftalık fikstür oluştur
+            simFikstur = {};
+            let takimlarKopya = [...tumSimTakimlar];
+            let n = takimlarKopya.length;
+            
+            for (let hafta = 1; hafta <= 34; hafta++) {
+                simFikstur[hafta] = [];
+                let tHafta = [...takimlarKopya];
+                for (let i = 0; i < n / 2; i++) {
+                    let ev = tHafta[i];
+                    let dep = tHafta[n - 1 - i];
+                    // İkinci yarıda ev sahibi/deplasman yer değiştirsin
+                    if (hafta > 17) {
+                        let temp = ev; ev = dep; dep = temp;
+                    }
+                    simFikstur[hafta].push({ ev, dep, evSkor: "", depSkor: "" });
+                }
+                // Döner turnuva kaydırma
+                let sabit = takimlarKopya[1];
+                for (let k = 1; k < n - 1; k++) {
+                    takimlarKopya[k] = takimlarKopya[k + 1];
+                }
+                takimlarKopya[n - 1] = sabit;
+            }
+            aktifSimHafta = 1;
+        }
+
+        function haftayiSimuleEt() {
+            if (!simFikstur[aktifSimHafta]) return;
+
+            simFikstur[aktifSimHafta].forEach(m => {
+                if (m.evSkor !== "") return; // Zaten oynandıysa atla
+
+                let evGuc = (m.ev === "Kullanıcı Takımı") ? gucHesapla() : Math.floor(Math.random() * 3);
+                let depGuc = (m.dep === "Kullanıcı Takımı") ? gucHesapla() : Math.floor(Math.random() * 3);
+
+                // Rastgele gol üretimi (güce göre ağırlıklı)
+                let evGol = Math.floor(Math.random() * 3) + (m.ev === "Kullanıcı Takımı" && evGuc > 7 ? 1 : 0);
+                let depGol = Math.floor(Math.random() * 3) + (m.dep === "Kullanıcı Takımı" && depGuc > 7 ? 1 : 0);
+
+                m.evSkor = evGol;
+                m.depSkor = depGol;
+
+                // Puan tablosunu güncelle
+                let sEv = simPuanDurumu[m.ev];
+                let sDep = simPuanDurumu[m.dep];
+
+                sEv.o++; sDep.o++;
+                sEv.a += evGol; sEv.y += depGol;
+                sDep.a += depGol; sDep.y += evGol;
+
+                if (evGol > depGol) {
+                    sEv.g++; sEv.p += 3;
+                    sDep.m++;
+                } else if (evGol < depGol) {
+                    sDep.g++; sDep.p += 3;
+                    sEv.m++;
+                } else {
+                    sEv.b++; sEv.p += 1;
+                    sDep.b++; sDep.p += 1;
+                }
+            });
+
+            aktifSimHafta++;
+            simulasyonEkraniniGuncelle();
+        }
+
+        function gucHesapla() {
+            // Kullanıcının seçtiği 4 oyuncunun toplam zorluk seviyelerine göre güç katsayısı
+            let toplamZorluk = 0;
+            if (userKadro.kaleci) toplamZorluk += (4 - userKadro.kaleci.zorluk);
+            if (userKadro.defans) toplamZorluk += (4 - userKadro.defans.zorluk);
+            if (userKadro.ortaSaha) toplamZorluk += (4 - userKadro.ortaSaha.zorluk);
+            if (userKadro.forvet) toplamZorluk += (4 - userKadro.forvet.zorluk);
+            return toplamZorluk;
+        }
+
+        function skoruListeyeKaydet() {
+            let userPuan = simPuanDurumu["Kullanıcı Takımı"] ? simPuanDurumu["Kullanıcı Takımı"].p : 0;
+            enIyiSkorlarListesi.push({ ad: oyuncuIsimleri[aktifKullaniciIndex], puan: userPuan });
+            enIyiSkorlarListesi.sort((a, b) => b.puan - a.puan);
+            if (enIyiSkorlarListesi.length > 10) enIyiSkorlarListesi = enIyiSkorlarListesi.slice(0, 10);
+            verileriKaydet();
+        }
+
+        function enIyiSkorlariGoster() {
+            let tbody = document.getElementById("enIyiSkorlarBody");
+            tbody.innerHTML = "";
+            if (enIyiSkorlarListesi.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="color: #64748b;">Henüz kayıtlı skor yok.</td></tr>`;
+                return;
+            }
+            enIyiSkorlarListesi.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${index + 1}.</b></td>
+                        <td>${item.ad}</td>
+                        <td><b>${item.puan} P</b></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function skorlariSifirla() {
+            if (confirm("En iyi skorlar listesini sıfırlamak istediğinize emin misiniz?")) {
+                enIyiSkorlarListesi = [];
+                verileriKaydet();
+                enIyiSkorlariGoster();
+            }
+        }
+
+        // Gerçek Maçlar ve Tahmin Paneli Fonksiyonları
         function gercekHaftaDegisti() {
             let h = document.getElementById("gercekHaftaSecici").value;
             let alan = document.getElementById("gercekMaclarAlani");
             alan.innerHTML = "";
             if(!gercekFikstur[h]) return;
             
-            let readonlyAttr = (aktifKullaniciIndex !== 0) ? "readonly style='background-color:#e2e8f0;'" : "";
+            let isAdmin = (aktifKullaniciIndex === 0);
+            let disabl = isAdmin ? "" : "disabled";
 
             gercekFikstur[h].forEach((mac, index) => {
                 alan.innerHTML += `
@@ -468,9 +896,10 @@
                             <span>${mac.ev}</span>
                             <img src="${logoGetir(mac.ev)}" class="team-logo" alt="">
                         </div>
-                        <div>
-                            <input type="number" ${readonlyAttr} id="g_h${h}_m${index}_ev" value="${mac.evSkor}" oninput="gercekSkorKaydet(${h}, ${index})"> - 
-                            <input type="number" ${readonlyAttr} id="g_h${h}_m${index}_dep" value="${mac.depSkor}" oninput="gercekSkorKaydet(${h}, ${index})">
+                        <div class="score-inputs">
+                            <input ${disabl} type="number" min="0" class="score-input" id="g_ev_${h}_${index}" value="${mac.evSkor}" onchange="gercekSkorGuncelle(${h}, ${index})">
+                            <span>-</span>
+                            <input ${disabl} type="number" min="0" class="score-input" id="g_dep_${h}_${index}" value="${mac.depSkor}" onchange="gercekSkorGuncelle(${h}, ${index})">
                         </div>
                         <div class="team-box right">
                             <img src="${logoGetir(mac.dep)}" class="team-logo" alt="">
@@ -480,15 +909,17 @@
             });
         }
 
-        function gercekSkorKaydet(h, i) {
-            if (aktifKullaniciIndex !== 0) return; // Yetkisiz müdahaleyi engelle
-            gercekFikstur[h][i].evSkor = document.getElementById(`g_h${h}_m${i}_ev`).value;
-            gercekFikstur[h][i].depSkor = document.getElementById(`g_h${h}_m${i}_dep`).value;
+        function gercekSkorGuncelle(h, i) {
+            if (aktifKullaniciIndex !== 0) return;
+            let evVal = document.getElementById(`g_ev_${h}_${i}`).value;
+            let depVal = document.getElementById(`g_dep_${h}_${i}`).value;
+            gercekFikstur[h][i].evSkor = evVal;
+            gercekFikstur[h][i].depSkor = depVal;
             verileriKaydet();
         }
 
         function tahminHaftaDegisti() {
-            let p = aktifKullaniciIndex; // Oturum açan kullanıcının indeksini zorunlu kıl
+            let p = aktifKullaniciIndex;
             let h = document.getElementById("tahminHaftaSecici").value;
             let alan = document.getElementById("tahminMaclarAlani");
             alan.innerHTML = "";
@@ -501,9 +932,10 @@
                             <span>${mac.ev}</span>
                             <img src="${logoGetir(mac.ev)}" class="team-logo" alt="">
                         </div>
-                        <div>
-                            <input type="number" id="t_p${p}_h${h}_m${i}_ev" value="${mac.evSkor}" oninput="tahminSkorKaydet(${p}, ${h}, ${i})"> - 
-                            <input type="number" id="t_p${p}_h${h}_m${i}_dep" value="${mac.depSkor}" oninput="tahminSkorKaydet(${p}, ${h}, ${i})">
+                        <div class="choices-group">
+                            <button class="choice-btn ${mac.sonuc === '1' ? 'active-1' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '1')">1</button>
+                            <button class="choice-btn ${mac.sonuc === '0' ? 'active-0' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '0')">0</button>
+                            <button class="choice-btn ${mac.sonuc === '2' ? 'active-2' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '2')">2</button>
                         </div>
                         <div class="team-box right">
                             <img src="${logoGetir(mac.dep)}" class="team-logo" alt="">
@@ -513,10 +945,10 @@
             });
         }
 
-        function tahminSkorKaydet(p, h, i) {
-            oyuncuTahminleri[p][h][i].evSkor = document.getElementById(`t_p${p}_h${h}_m${i}_ev`).value;
-            oyuncuTahminleri[p][h][i].depSkor = document.getElementById(`t_p${p}_h${h}_m${i}_dep`).value;
+        function tahminSonucSec(p, h, i, val) {
+            oyuncuTahminleri[p][h][i].sonuc = (oyuncuTahminleri[p][h][i].sonuc === val) ? "" : val;
             verileriKaydet();
+            tahminHaftaDegisti();
         }
 
         function tahminleriKaydetMesaji() { 
@@ -531,20 +963,29 @@
                 if(!gercekFikstur[h]) continue;
                 gercekFikstur[h].forEach(m => {
                     if(m.evSkor === "" || m.depSkor === "") return;
-                    let es=Number(m.evSkor), ds=Number(m.depSkor);
+                    let eS = Number(m.evSkor);
+                    let dS = Number(m.depSkor);
                     pd[m.ev].o++; pd[m.dep].o++;
-                    pd[m.ev].a += es; pd[m.ev].y += ds;
-                    pd[m.dep].a += ds; pd[m.dep].y += es;
-                    if(es > ds) { pd[m.ev].g++; pd[m.ev].p+=3; pd[m.dep].m++; }
-                    else if(es < ds) { pd[m.dep].g++; pd[m.dep].p+=3; pd[m.ev].m++; }
-                    else { pd[m.ev].b++; pd[m.ev].p+=1; pd[m.dep].b++; pd[m.dep].p+=1; }
+                    pd[m.ev].a += eS; pd[m.ev].y += dS;
+                    pd[m.dep].a += dS; pd[m.dep].y += eS;
+
+                    if(eS > dS) {
+                        pd[m.ev].g++; pd[m.ev].p += 3;
+                        pd[m.dep].m++;
+                    } else if(eS < dS) {
+                        pd[m.dep].g++; pd[m.dep].p += 3;
+                        pd[m.ev].m++;
+                    } else {
+                        pd[m.ev].b++; pd[m.ev].p += 1;
+                        pd[m.dep].b++; pd[m.dep].p += 1;
+                    }
                 });
             }
             let tbody = document.getElementById("gercekPuanTablosuBody");
             tbody.innerHTML = "";
-            let sirali = Object.keys(pd).sort((a,b) => (pd[b].p - pd[a].p) || ((pd[b].a-pd[b].y)-(pd[a].a-pd[a].y)));
+            let sirali = Object.keys(pd).sort((a,b) => (pd[b].p - pd[a].p) || ((pd[b].a - pd[b].y) - (pd[a].a - pd[a].y)) || (pd[b].a - pd[a].a));
             sirali.forEach((t, i) => {
-                let s = pd[t], av = s.a-s.y;
+                let s = pd[t], av = s.a - s.y;
                 let tr = document.createElement("tr");
                 if (i === 0) tr.className = "ucl-sampiyon";
                 else if (i === 1) tr.className = "ucl-eleme";
@@ -554,12 +995,7 @@
 
                 tr.innerHTML = `
                     <td><b>${i+1}.</b></td>
-                    <td>
-                        <div class="team-cell">
-                            <img src="${logoGetir(t)}" class="team-logo" alt="">
-                            <b>${t}</b>
-                        </div>
-                    </td>
+                    <td><div class="team-cell"><img src="${logoGetir(t)}" class="team-logo" alt=""><b>${t}</b></div></td>
                     <td>${s.o}</td><td>${s.g}</td><td>${s.b}</td><td>${s.m}</td><td>${s.a}</td><td>${s.y}</td><td>${av}</td><td><b>${s.p}</b></td>`;
                 tbody.appendChild(tr);
             });
@@ -568,25 +1004,34 @@
         function yarismaPuanlariniHesapla() {
             let stats = [];
             for(let p=0; p<6; p++) {
-                let pts=0, tam=0, fark=0;
+                let pts=0, dogruTahmin=0;
                 for(let h=1; h<=34; h++) {
                     if(!gercekFikstur[h] || !oyuncuTahminleri[p][h]) continue;
                     gercekFikstur[h].forEach((gm, i) => {
                         let tm = oyuncuTahminleri[p][h][i];
-                        if(gm.evSkor==="" || tm.evSkor==="") return;
-                        let ge=Number(gm.evSkor), gd=Number(gm.depSkor), te=Number(tm.evSkor), td=Number(tm.depSkor);
-                        if(ge==te && gd==td) { pts+=10; tam++; }
-                        else if((ge-gd == te-td) && ((ge>gd && te>td) || (ge<gd && te<td) || (ge==gd && te==td))) { pts+=7; fark++; }
-                        else if((ge>gd && te>td) || (ge<gd && te<td) || (ge==gd && te==td)) { pts+=5; fark++; }
+                        if(gm.evSkor === "" || gm.depSkor === "" || !tm.sonuc) return;
+                        
+                        let eS = Number(gm.evSkor);
+                        let dS = Number(gm.depSkor);
+                        let gercekSonuc = eS > dS ? "1" : (eS < dS ? "2" : "0");
+
+                        if(gercekSonuc === tm.sonuc) {
+                            pts += 3;
+                            dogruTahmin++;
+                        }
                     });
                 }
-                stats.push({name: oyuncuIsimleri[p], tam, fark, pts});
+                stats.push({name: oyuncuIsimleri[p], dogruTahmin, pts});
             }
             stats.sort((a,b) => b.pts - a.pts);
             let yBody = document.getElementById("yarismaTablosuBody");
             yBody.innerHTML = "";
-            stats.forEach((o, i) => yBody.innerHTML += `<tr><td><b>${i+1}.</b></td><td><b>${o.name}</b></td><td>${o.tam}</td><td>${o.fark}</td><td><b>${o.pts}</b></td></tr>`);
+            stats.forEach((o, i) => yBody.innerHTML += `<tr><td><b>${i+1}.</b></td><td><b>${o.name}</b></td><td>${o.dogruTahmin}</td><td><b>${o.pts}</b></td></tr>`);
         }
+
+        window.onload = function() {
+            verileriYukle();
+        };
     </script>
 </body>
 </html>
