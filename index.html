@@ -2,12 +2,17 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Süper Lig Tahmin Yarışması (Hibrit Mod)</title>
+    <title>Süper Lig Tahmin ve Pro "Ben Kimim?" Oyunu</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         h1 { text-align: center; color: #1e293b; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
         
+        /* Mod Seçim Barı */
+        .mod-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .mod-btn { background: #cbd5e1; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #334155; transition: 0.2s; }
+        .mod-btn.active { background: #2563eb; color: white; }
+
         .main-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
         .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 480px; }
         h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #334155; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
@@ -21,17 +26,16 @@
         .team-box.right { justify-content: flex-start; text-align: left; }
         .team-logo { width: 22px; height: 22px; object-fit: contain; }
 
-        /* Skor Input Stilleri (Gerçek Maçlar İçin) */
         .score-inputs { display: flex; align-items: center; gap: 4px; }
         .score-input { width: 28px; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
 
-        /* 1-0-2 Buton Grubu Stilleri (Tahminler İçin) */
         .choices-group { display: flex; gap: 4px; }
         .choice-btn { background: #e2e8f0; border: none; padding: 5px 9px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; color: #334155; transition: 0.2s; }
         .choice-btn:hover { background: #cbd5e1; }
         .choice-btn.active-1 { background: #2563eb; color: white; }
         .choice-btn.active-0 { background: #d97706; color: white; }
         .choice-btn.active-2 { background: #dc2626; color: white; }
+        .choice-btn:disabled { opacity: 0.8; cursor: not-allowed; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #e2e8f0; padding: 5px; text-align: center; font-size: 12px; }
@@ -53,6 +57,11 @@
         #girisModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .modal-card { background: white; padding: 30px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-card input, .modal-card select { width: 100%; padding: 8px; margin-top: 10px; margin-bottom: 15px; box-sizing: border-box; }
+        
+        /* Oyun Modu Alanı */
+        .game-mode-container { display: none; width: 100%; max-width: 650px; margin: 0 auto; }
+        .game-info-bar { display: flex; justify-content: space-between; background: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 13px; color: #334155; margin-bottom: 12px; }
+        .career-step { background: #f8fafc; border-left: 4px solid #2563eb; padding: 8px 12px; margin-bottom: 8px; font-size: 13px; color: #334155; border-radius: 0 6px 6px 0; }
     </style>
 </head>
 <body>
@@ -76,11 +85,18 @@
         </div>
     </div>
 
-    <h1>Süper Lig Tahmin Yarışması ⚽</h1>
-    <div class="subtitle" id="hosgeldinYazisi">Gerçek Skorlar (Admin) & 1-0-2 Tahmin Modülü</div>
+    <h1>Süper Lig Tahmin ve Oyun Platformu ⚽</h1>
+    <div class="subtitle" id="hosgeldinYazisi">Profesyonel "Ben Kimim?" Futbolcu Bulmaca Modülü</div>
 
-    <div class="main-container">
-        <!-- 1. KUTU: GERÇEK MAÇ SONUÇLARI (SKOR GİRİŞLİ & ADMIN KONTROLLÜ) -->
+    <!-- ÜST MOD SEÇİM BARı -->
+    <div class="mod-selector">
+        <button class="mod-btn active" id="btnModTahmin" onclick="modDegistir('tahmin')">🏆 Tahmin & Skor Yarışması</button>
+        <button class="mod-btn" id="btnModOyun" onclick="modDegistir('oyun')">⚽ Pro "Ben Kimim?" Oyunu</button>
+    </div>
+
+    <!-- TAHMİN YARIŞMASI ANA KONTEYNERİ -->
+    <div class="main-container" id="tahminModuAlani">
+        <!-- 1. KUTU: GERÇEK MAÇ SONUÇLARI -->
         <div class="card">
             <h2>
                 <span>Gerçek Maç Skorları</span>
@@ -90,21 +106,22 @@
             <button class="btn" id="btnGercekGuncelle" onclick="gercekPuanlariHesapla()">Puan Durumunu Güncelle</button>
         </div>
 
-        <!-- 2. KUTU: 6 KİŞİLİK TAHMİN PANELİ (1-0-2 BUTONLU) -->
+        <!-- 2. KUTU: TAHMİN GİRİŞ PANELİ -->
         <div class="card">
             <h2>
                 <span id="aktifProfilBaslik">Tahmin Giriş Paneli</span>
                 <span id="kilitliProfilAdi" style="font-size: 13px; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;">-</span>
             </h2>
             <div class="controls-row">
-                <span id="aktifProfilAdi" style="font-weight: bold; font-size: 13px; color: #2563eb;">Tahminler</span>
+                <select id="tahminOyuncuGoruntuleSecici" onchange="tahminHaftaDegisti()" style="font-weight: bold; color: #2563eb;"></select>
                 <select id="tahminHaftaSecici" onchange="tahminHaftaDegisti()"></select>
             </div>
+            <div id="tahminDurumMesaji" style="font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center;"></div>
             <div id="tahminMaclarAlani"></div>
-            <button class="btn btn-green" onclick="tahminleriKaydetMesaji()">Tahminleri Kaydet</button>
+            <button class="btn btn-green" id="btnTahminKaydet" onclick="tahminleriKardinalKaydet()">Tahminleri Kalıcı Olarak Kaydet</button>
         </div>
 
-        <!-- 3. KUTU: GERÇEK PUAN DURUMU (AVERAJLI) -->
+        <!-- 3. KUTU: GERÇEK PUAN DURUMU -->
         <div class="card" style="width: 500px;">
             <h2>Gerçek Puan Durumu</h2>
             <table>
@@ -132,6 +149,51 @@
         </div>
     </div>
 
+    <!-- PRO "BEN KİMİM?" OYUN MODU (AYRI EKRAN) -->
+    <div class="game-mode-container" id="oyunModuAlani">
+        <div class="card" style="width: 100%; box-sizing: border-box;">
+            <h2>⚽ Pro "Ben Kimim?" Futbolcu Bulmaca</h2>
+            
+            <div id="oyunBaslangicEkrani" style="text-align: center; padding: 20px;">
+                <p style="color: #475569; font-size: 14px; margin-bottom: 20px;">
+                    Avrupa'nın 5 büyük ligi ve Süper Lig'den özenle seçilmiş, kolay olmayan profiller. Kolaydan zora doğru ilerleyen seride kariyer basamaklarını takip et!
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <button class="btn" style="width: 160px;" onclick="oyunuBaslat(10)">10 Soruluk Test</button>
+                    <button class="btn btn-green" style="width: 160px;" onclick="oyunuBaslat(20)">20 Soruluk Maraton</button>
+                </div>
+            </div>
+
+            <div id="oyunAktifEkrani" style="display: none;">
+                <div class="game-info-bar">
+                    <span id="soruSayacBilgi">Soru: 1 / 10</span>
+                    <span id="zorlukDerecesiBilgi" style="color: #d97706;">Zorluk: Orta</span>
+                    <span id="oyunPuanBilgi">Puan: 0</span>
+                </div>
+
+                <div style="font-size: 13px; font-weight: bold; color: #64748b; margin-bottom: 8px;">Kariyer Basamakları & İpuçları:</div>
+                <div id="kariyerBasamaklariAlani"></div>
+
+                <div class="controls-row" style="margin-top: 15px;">
+                    <input type="text" id="benKimimInput" placeholder="Futbolcunun adını veya soyadını yazın..." style="flex: 1; padding: 9px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;" onkeypress="if(event.key === 'Enter') futbolcuTahminiYap()">
+                    <button class="btn" style="width: 130px; margin-top: 0;" onclick="futbolcuTahminiYap()">Tahmin Et</button>
+                </div>
+                <div id="benKimimMesaj" style="font-size: 14px; font-weight: bold; margin-top: 10px; text-align: center; min-height: 22px;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn" id="sonrakiSoruBtn" style="display: none; background-color: #10b981;" onclick="sonrakiSoruyaGec()">Sonraki Soru ➡️</button>
+                    <button class="btn" style="background-color: #64748b;" onclick="oyunuSifirlaVeDon()">Menüye Dön</button>
+                </div>
+            </div>
+            
+            <div id="oyunBitisEkrani" style="display: none; text-align: center; padding: 20px;">
+                <h3 style="color: #1e293b; font-size: 20px;">Tebrikler, Testi Tamamladın! 🏆</h3>
+                <p id="finalSkorYazisi" style="font-size: 16px; color: #475569; margin: 15px 0;"></p>
+                <button class="btn" onclick="oyunuSifirlaVeDon()">Ana Menüye Dön</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const oyuncuIsimleri = ["Carry", "Bilimsel NoFlexs", "Atıfheist", "Lazori", "Rookie", "Misafir"];
         
@@ -154,6 +216,37 @@
             "Amed Sportif Faaliyetler", "Çorum FK"
         ];
 
+        // Genişletilmiş Pro "Ben Kimim?" Oyuncu Veritabanı
+        const proBenKimimListesi = [
+            { adlar: ["giroud", "olivier giroud"], zorluk: "Orta", ipuclari: ["Fransa Milli Takımı'nın tüm zamanların en golcü oyuncularından biridir.", "Kariyerinde Montpellier ile Ligue 1 şampiyonluğu yaşamıştır.", "Chelsea ve Arsenal formaları giymiştir, Milan ile Serie A kazanmıştır.", "Kariyerinin son döneminde Milan'dan ayrılıp MLS'e transfer olmuştur."] },
+            { adlar: ["thuram", "marcus thuram"], zorluk: "Orta", ipuclari: ["Fransız eski futbolcu Lilian Thuram'ın milli futbolcu oğludur.", "Bundesliga'da Gladbach formasıyla dikkat çektikten sonra Inter'e transfer olmuştur.", "Serie A'da gol krallığı yarışlarında üst sıralarda yer alan güçlü bir forvettir."] },
+            { adlar: ["calhanoglu", "hakan çalhanoğlu", "hakan calhanoglu"], zorluk: "Kolay", ipuclari: ["Milli takımımızın kaptanı ve orta sahadaki beyinlerinden biridir.", "Bundesliga'da Hamburg ve Leverkusen formaları giydikten sonra Milan'a transfer olmuştur.", "Milan'dan ezeli rakibi Inter'e geçerek dünya çapında elit bir regista olmuştur."] },
+            { adlar: ["gundogan", "ilkay gündoğan", "ilkay gundogan"], zorluk: "Kolay", ipuclari: ["Kariyerinde Borussia Dortmund ve Manchester City ile zirveye çıkmıştır.", "Pep Guardiola'nın vazgeçilmezlerinden olup Şampiyonlar Ligi kupası kaldırmıştır.", "Bir dönem Barcelona forması giymiş, ardından yeniden Manchester City'ye dönmüştür."] },
+            { adlar: ["mctominay", "scott mctominay"], zorluk: "Zor", ipuclari: ["Manchester United altyapısından yetişip uzun yıllar Kırmızı Şeytanlar'ın orta sahasında savaşmıştır.", "İskoçya milli takımının skor üreten en önemli silahsörlerindendir.", "Sürpriz bir hamleyle Serie A devi Napoli'ye transfer olmuştur."] },
+            { adlar: ["pulisic", "christian pulisic"], zorluk: "Orta", ipuclari: ["'Kaptan Amerika' lakaplı hücum oyuncusudur.", "Borussia Dortmund formasıyla parlayıp Chelsea'ye yüksek bir bedelle transfer olmuştur.", "Şampiyonlar Ligi kazandıktan sonra İtalya'da Milan formasıyla kariyerinin en golcü dönemini yaşamaktadır."] },
+            { adlar: ["boniface", "victor boniface"], zorluk: "Zor", ipuclari: ["Nijeryalı güçlü santrafordur.", "Bayer Leverkusen'in tarihi mağlubiyet almadan kazandığı Bundesliga şampiyonluğunun kilit isimlerindendir.", "Fiziksel gücü ve son vuruşlarıyla dikkat çeker."] },
+            { adlar: ["guirassy", "serhou guirassy"], zorluk: "Zor", ipuclari: ["Gine milli takımı forması giyen golcü oyuncudur.", "Stuttgart'ta gösterdiği sıra dışı çıkış ve gol performansıyla büyük kulüplerin radarına girmiştir.", "Bundesliga'da Borussia Dortmund'a transfer olmuştur."] },
+            { adlar: ["isak", "alexander isak"], zorluk: "Orta", ipuclari: ["İsveçli uzun boylu ve teknik forvettir.", "Real Sociedad formasıyla İspanya'da dikkat çektiktan sonra Premier Lig'e adım atmıştır.", "Newcastle United'ın hücum hattındaki en büyük kozudur."] },
+            { adlar: ["olise", "michael olise"], zorluk: "Zor", ipuclari: ["Fransız sağ kanat oyuncusudur.", "Crystal Palace formasıyla Premier Lig'i salladıktan sonra devlerin listesine girmiştir.", "Bayern Munich kadrosuna katılarak kariyerinde büyük bir sıçrama yapmıştır."] },
+            { adlar: ["zirkzee", "joshua zirkzee"], zorluk: "Zor", ipuclari: ["Bayern Munich altyapısından yetişen Hollandalı forvettir.", "Bologna'yı Serie A'da Şampiyonlar Ligi'ne taşıyan kadronun lideriydi.", "Premier Lig'de Manchester United forması giymektedir."] },
+            { adlar: ["soucek", "tomas soucek"], zorluk: "Orta", ipuclari: ["Çekya milli takımının ve orta sahanın hava toplarındaki hakimidir.", "Slavia Prag'dan Premier Lig ekibi West Ham United'a transfer olmuştur.", "Ceza sahasına sonradan yaptığı koşularla defalarca gol atmıştır."] },
+            { adlar: ["doucoure", "abdoulaye doucoure"], zorluk: "Zor", ipuclari: ["Fransız asıllı Malili merkez orta sahadır.", "Watford ve Everton formalarıyla Premier Lig'in tecrübeli ve dinamik isimlerinden biri olmuştur."] },
+            { adlar: ["barcola", "bradley barcola"], zorluk: "Zor", ipuclari: ["Lyon altyapısından yetişen genç Fransız kanat oyuncusudur.", "Kylian Mbappe'nin ayrılışı sonrası Paris Saint-Germain'in hücumdaki yeni kozu haline gelmiştir."] },
+            { adlar: ["davinson sanchez", "davinson", "sanchez"], zorluk: "Orta", ipuclari: ["Kolombiyalı sert ve atletik stoperdir.", "Ajax ve Tottenham Hotspur maceralarının ardından Süper Lig'e transfer olmuştur.", "Galatasaray savunmasının en önemli figürlerinden biridir."] },
+            { adlar: ["torreira", "lucas torreira"], zorluk: "Kolay", ipuclari: ["Uruguaylı 'dinamo' lakaplı orta sahadır.", "Pescara, Sampdoria, Arsenal, Atletico Madrid ve Fiorentina gibi takımlarda oynamıştır.", "Galatasaray orta sahasındaki kesici ve yönlendirici rolüyle tanınır."] },
+            { adlar: ["fred", "frederico rodrigues"], zorluk: "Kolay", ipuclari: ["Brezilyalı hareketli orta sahadır.", "Shakhtar Donetsk ve Manchester United geçmişi vardır.", "Fenerbahçe'nin orta sahasındaki tüm oyun planının merkezinde yer alır."] },
+            { adlar: ["szymanski", "sebastian szymanski"], zorluk: "Orta", ipuclari: ["Polonyalı on numaradır.", "Dinamo Moskova ve Feyenoord (kiralık) formaları giydikten sonra Süper Lig'e adım atmıştır.", "Fenerbahçe'de yüksek temposu ve uzaktan şutlarıyla bilinir."] },
+            { adlar: ["rafa silva", "rafa"], zorluk: "Kolay", ipuclari: ["Portekizli çabuk ve akıllı hücumcudur.", "Uzun yıllar Benfica formasıyla Şampiyonlar Ligi'nde ve Portekiz liginde yıldızlaşmıştır.", "Beşiktaş'a transfer olarak Süper Lig'e damga vurmuştur."] },
+            { adlar: ["immobile", "ciro immobile"], zorluk: "Kolay", ipuclari: ["İtalyan gol makinesidir.", "Torino ile Serie A gol krallıkları yaşamış, Lazio'nun tüm zamanların en çok gol atan oyuncusu olmuştur.", "Kariyerine Beşiktaş formasıyla devam etmektedir."] },
+            { adlar: ["cengiz ünder", "cengiz under", "ucler"], zorluk: "Kolay", ipuclari: ["Altınordu'dan çıkıp Başakşehir üzerinden Roma'ya transfer olan milli kanat oyuncumuzdur.", "Leicester City ve Marsilya formaları giydikten sonra Fenerbahçe'ye transfer olmuştur."] },
+            { adlar: ["enes ünal", "enes unal"], zorluk: "Orta", ipuclari: ["Bursaspor altyapısından genç yaşta Manchester City'ye transfer olan milli forvettir.", "İspanya'da Villarreal, Levante, Valladolid ve Getafe'de uzun yıllar gol attıktan sonra Premier Lig ekibi Bournemouth'a transfer olmuştur."] }
+        ];
+
+        let aktifOyunSorulari = [];
+        let oankiSoruIndex = 0;
+        let oyunSkoru = 0;
+        let toplamSoruSayisi = 10;
+
         function logoGetir(takimAdi) {
             let dosyaAdi = takimAdi
                 .toLowerCase()
@@ -164,9 +257,11 @@
 
         let gercekFikstur = {};
         let oyuncuTahminleri = [{}, {}, {}, {}, {}, {}];
+        // Hangi oyuncunun hangi hafta için tahminini kesin olarak kaydettiğini tutar: kayitliTahminler[oyuncuIndex][haftaNumarasi] = true/false
+        let kayitliTahminDurumlari = {};
 
         function verileriYukle() {
-            let versiyon = "v7_hibrit_sistem";
+            let versiyon = "v11_kilitli_tahminler";
             if (localStorage.getItem("superlig_versiyon") !== versiyon) {
                 localStorage.clear();
                 localStorage.setItem("superlig_versiyon", versiyon);
@@ -174,6 +269,7 @@
 
             let kayitliGercek = localStorage.getItem("superlig_gercekFikstur");
             let kayitliTahmin = localStorage.getItem("superlig_oyuncuTahminleri");
+            let kayitliDurumlar = localStorage.getItem("superlig_kayitliTahminDurumlari");
 
             if (kayitliGercek) {
                 gercekFikstur = JSON.parse(kayitliGercek);
@@ -188,11 +284,18 @@
                     oyuncuTahminleri[p] = JSON.parse(JSON.stringify(gercekFikstur));
                 }
             }
+
+            if (kayitliDurumlar) {
+                kayitliTahminDurumlari = JSON.parse(kayitliDurumlar);
+            } else {
+                kayitliTahminDurumlari = {};
+            }
         }
 
         function verileriKaydet() {
             localStorage.setItem("superlig_gercekFikstur", JSON.stringify(gercekFikstur));
             localStorage.setItem("superlig_oyuncuTahminleri", JSON.stringify(oyuncuTahminleri));
+            localStorage.setItem("superlig_kayitliTahminDurumlari", JSON.stringify(kayitliTahminDurumlari));
         }
 
         function sistemeGirisYap() {
@@ -206,6 +309,110 @@
             } else {
                 document.getElementById("hataMesaji").innerText = "Hatalı şifre! Lütfen tekrar deneyin.";
             }
+        }
+
+        // Mod Değiştirme Fonksiyonu
+        function modDegistir(mod) {
+            let tahminAlani = document.getElementById("tahminModuAlani");
+            let oyunAlani = document.getElementById("oyunModuAlani");
+            let btnTahmin = document.getElementById("btnModTahmin");
+            let btnOyun = document.getElementById("btnModOyun");
+
+            if (mod === 'tahmin') {
+                tahminAlani.style.display = "flex";
+                oyunAlani.style.display = "none";
+                btnTahmin.className = "mod-btn active";
+                btnOyun.className = "mod-btn";
+            } else {
+                tahminAlani.style.display = "none";
+                oyunAlani.style.display = "block";
+                btnOyun.className = "mod-btn active";
+                btnTahmin.className = "mod-btn";
+                oyunuSifirlaVeDon();
+            }
+        }
+
+        function oyunuSifirlaVeDon() {
+            document.getElementById("oyunBaslangicEkrani").style.display = "block";
+            document.getElementById("oyunAktifEkrani").style.display = "none";
+            document.getElementById("oyunBitisEkrani").style.display = "none";
+        }
+
+        function oyunuBaslat(soruSayisi) {
+            toplamSoruSayisi = soruSayisi;
+            oankiSoruIndex = 0;
+            oyunSkoru = 0;
+
+            let karisikListe = [...proBenKimimListesi].sort(() => Math.random() - 0.5);
+            aktifOyunSorulari = karisikListe.slice(0, Math.min(toplamSoruSayisi, karisikListe.length));
+
+            document.getElementById("oyunBaslangicEkrani").style.display = "none";
+            document.getElementById("oyunAktifEkrani").style.display = "block";
+            document.getElementById("oyunBitisEkrani").style.display = "none";
+
+            soruyuEkranaGetir();
+        }
+
+        function soruyuEkranaGetir() {
+            if (oankiSoruIndex >= aktifOyunSorulari.length) {
+                oyunuBitir();
+                return;
+            }
+
+            let soru = aktifOyunSorulari[oankiSoruIndex];
+            document.getElementById("soruSayacBilgi").innerText = `Soru: ${oankiSoruIndex + 1} / ${aktifOyunSorulari.length}`;
+            document.getElementById("zorlukDerecesiBilgi").innerText = `Zorluk: ${soru.zorluk}`;
+            document.getElementById("oyunPuanBilgi").innerText = `Puan: ${oyunSkoru}`;
+            document.getElementById("benKimimInput").value = "";
+            document.getElementById("benKimimMesaj").innerText = "";
+            document.getElementById("benKimimInput").disabled = false;
+            document.getElementById("sonrakiSoruBtn").style.display = "none";
+
+            let basamaklarDiv = document.getElementById("kariyerBasamaklariAlani");
+            basamaklarDiv.innerHTML = "";
+
+            let ipuclari = [...soru.ipuclari];
+            ipuclari.forEach((ipucu, index) => {
+                basamaklarDiv.innerHTML += `<div class="career-step"><b>İpucu ${index + 1}:</b> ${ipucu}</div>`;
+            });
+        }
+
+        function futbolcuTahminiYap() {
+            let tahmin = document.getElementById("benKimimInput").value.trim().toLowerCase();
+            let mesajDiv = document.getElementById("benKimimMesaj");
+            let aktifSoru = aktifOyunSorulari[oankiSoruIndex];
+
+            if (!tahmin) {
+                mesajDiv.style.color = "#dc2626";
+                mesajDiv.innerText = "Lütfen bir isim yazın!";
+                return;
+            }
+
+            let dogruMu = aktifSoru.adlar.some(dogruAd => tahmin.includes(dogruAd) || dogruAd.includes(tahmin));
+
+            if (dogruMu) {
+                oyunSkoru += 10;
+                mesajDiv.style.color = "#10b981";
+                mesajDiv.innerText = `Tebrikler! Doğru tahmin 🎯 (+10 Puan)`;
+                document.getElementById("benKimimInput").disabled = true;
+                document.getElementById("sonrakiSoruBtn").style.display = "block";
+                document.getElementById("oyunPuanBilgi").innerText = `Puan: ${oyunSkoru}`;
+            } else {
+                mesajDiv.style.color = "#dc2626";
+                mesajDiv.innerText = "Yanlış tahmin, tekrar dene!";
+            }
+        }
+
+        function sonrakiSoruyaGec() {
+            oankiSoruIndex++;
+            soruyuEkranaGetir();
+        }
+
+        function oyunuBitir() {
+            document.getElementById("oyunAktifEkrani").style.display = "none";
+            document.getElementById("oyunBitisEkrani").style.display = "block";
+            let maxPuan = aktifOyunSorulari.length * 10;
+            document.getElementById("finalSkorYazisi").innerText = `Toplam Skorun: ${oyunSkoru} / ${maxPuan}`;
         }
 
         function fiksturOlustur(hedefFikstur) {
@@ -432,7 +639,14 @@
             
             let aktifIsim = oyuncuIsimleri[aktifKullaniciIndex];
             document.getElementById("kilitliProfilAdi").innerText = `Oturum: ${aktifIsim}`;
-            document.getElementById("aktifProfilAdi").innerText = `${aktifIsim} Tahminleri`;
+
+            // Görüntüleme seçicisini doldur (Herkes herkesin tahminini seçip görebilsin)
+            let gucSecici = document.getElementById("tahminOyuncuGoruntuleSecici");
+            gucSecici.innerHTML = "";
+            for (let i = 0; i < oyuncuIsimleri.length; i++) {
+                let seciliAttr = (i === aktifKullaniciIndex) ? "selected" : "";
+                gucSecici.innerHTML += `<option value="${i}" ${seciliAttr}>${oyuncuIsimleri[i]} (Tahminleri)</option>`;
+            }
 
             let gSecici = document.getElementById("gercekHaftaSecici");
             let tSecici = document.getElementById("tahminHaftaSecici");
@@ -453,7 +667,6 @@
             yarismaPuanlariniHesapla();
         }
 
-        // Gerçek Maçlar: Skor Girişli (Sadece Admin değiştirebilir)
         function gercekHaftaDegisti() {
             let h = document.getElementById("gercekHaftaSecici").value;
             let alan = document.getElementById("gercekMaclarAlani");
@@ -492,15 +705,38 @@
             verileriKaydet();
         }
 
-        // Tahmin Paneli: 1-0-2 Butonlu
         function tahminHaftaDegisti() {
-            let p = aktifKullaniciIndex;
+            let secilenGoruntuIndex = Number(document.getElementById("tahminOyuncuGoruntuleSecici").value);
             let h = document.getElementById("tahminHaftaSecici").value;
             let alan = document.getElementById("tahminMaclarAlani");
+            let durumMesajiDiv = document.getElementById("tahminDurumMesaji");
+            let kaydetBtn = document.getElementById("btnTahminKaydet");
+            
             alan.innerHTML = "";
-            if(!oyuncuTahminleri[p][h]) return;
+            if(!oyuncuTahminleri[secilenGoruntuIndex][h]) return;
 
-            oyuncuTahminleri[p][h].forEach((mac, i) => {
+            // Bu hafta için bu kullanıcının tahmini kilitlenmiş mi?
+            let kilitliMi = kayitliTahminDurumlari[secilenGoruntuIndex] && kayitliTahminDurumlari[secilenGoruntuIndex][h] === true;
+            // Başkasının tablosuna bakıyorsa veya kendi tablosunu kilitlediyse butonlar pasif olur
+            let duzenlenebilirMi = (secilenGoruntuIndex === aktifKullaniciIndex) && !kilitliMi;
+
+            if (kilitliMi) {
+                durumMesajiDiv.style.color = "#dc2626";
+                durumMesajiDiv.innerText = `🔒 Bu haftaki tahminler ${oyuncuIsimleri[secilenGoruntuIndex]} tarafından kesin olarak kaydedilmiş ve kilitlenmiştir. Değiştirilemez.`;
+                kaydetBtn.style.display = "none";
+            } else if (secilenGoruntuIndex !== aktifKullaniciIndex) {
+                durumMesajiDiv.style.color = "#64748b";
+                durumMesajiDiv.innerText = `👀 ${oyuncuIsimleri[secilenGoruntuIndex]} adlı kullanıcının tahminlerini görüntülüyorsunuz (Salt okunur).`;
+                kaydetBtn.style.display = "none";
+            } else {
+                durumMesajiDiv.style.color = "#2563eb";
+                durumMesajiDiv.innerText = `✍️ Henüz kilitlenmedi. Kaydettikten sonra bir daha değiştiremeyeceksiniz!`;
+                kaydetBtn.style.display = "block";
+            }
+
+            oyuncuTahminleri[secilenGoruntuIndex][h].forEach((mac, i) => {
+                let disabledAttr = duzenlenebilirMi ? "" : "disabled";
+                
                 alan.innerHTML += `
                     <div class="match-row">
                         <div class="team-box left">
@@ -508,9 +744,9 @@
                             <img src="${logoGetir(mac.ev)}" class="team-logo" alt="">
                         </div>
                         <div class="choices-group">
-                            <button class="choice-btn ${mac.sonuc === '1' ? 'active-1' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '1')">1</button>
-                            <button class="choice-btn ${mac.sonuc === '0' ? 'active-0' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '0')">0</button>
-                            <button class="choice-btn ${mac.sonuc === '2' ? 'active-2' : ''}" onclick="tahminSonucSec(${p}, ${h}, ${i}, '2')">2</button>
+                            <button ${disabledAttr} class="choice-btn ${mac.sonuc === '1' ? 'active-1' : ''}" onclick="tahminSonucSec(${h}, ${i}, '1')">1</button>
+                            <button ${disabledAttr} class="choice-btn ${mac.sonuc === '0' ? 'active-0' : ''}" onclick="tahminSonucSec(${h}, ${i}, '0')">0</button>
+                            <button ${disabledAttr} class="choice-btn ${mac.sonuc === '2' ? 'active-2' : ''}" onclick="tahminSonucSec(${h}, ${i}, '2')">2</button>
                         </div>
                         <div class="team-box right">
                             <img src="${logoGetir(mac.dep)}" class="team-logo" alt="">
@@ -520,18 +756,34 @@
             });
         }
 
-        function tahminSonucSec(p, h, i, val) {
+        function tahminSonucSec(h, i, val) {
+            let p = aktifKullaniciIndex;
+            // Kilitliyse asla değiştiremesin
+            if (kayitliTahminDurumlari[p] && kayitliTahminDurumlari[p][h] === true) return;
+
             oyuncuTahminleri[p][h][i].sonuc = (oyuncuTahminleri[p][h][i].sonuc === val) ? "" : val;
             verileriKaydet();
             tahminHaftaDegisti();
         }
 
-        function tahminleriKaydetMesaji() { 
-            verileriKaydet(); 
-            alert("Tahminleriniz başarıyla kaydedildi!"); 
+        function tahminleriKardinalKaydet() {
+            let p = aktifKullaniciIndex;
+            let h = document.getElementById("tahminHaftaSecici").value;
+
+            // Boş tahmin kontrolü isteğe bağlı yapılabilir veya direkt kilitlenebilir.
+            let onay = confirm(`${h}. Hafta tahminlerinizi KALICI olarak kaydetmek istediğinize emin misiniz? Kaydettikten sonra bir daha değişiklik yapamayacaksınız!`);
+            if (!onay) return;
+
+            if (!kayitliTahminDurumlari[p]) {
+                kayitliTahminDurumlari[p] = {};
+            }
+            kayitliTahminDurumlari[p][h] = true;
+
+            verileriKaydet();
+            tahminHaftaDegisti();
+            alert("Tahminleriniz başarıyla kilitlendi ve kaydedildi!");
         }
 
-        // Gerçek Maç Skorlarına Göre Averajlı Puan Durumu Hesaplama
         function gercekPuanlariHesapla() {
             let pd = {};
             takimListesi.forEach(t => pd[t] = {o:0, g:0, b:0, m:0, a:0, y:0, p:0});
@@ -577,7 +829,6 @@
             });
         }
 
-        // Yarışma Puanı Hesaplama (Gerçek Maç Skorlarından 1-0-2 Çıkarılıp Tahminlerle Karşılaştırılır)
         function yarismaPuanlariniHesapla() {
             let stats = [];
             for(let p=0; p<6; p++) {
@@ -594,6 +845,7 @@
 
                         if(gercekSonuc === tm.sonuc) {
                             pts += 3;
+                            dogruTagmin++; // fixed typo below
                             dogruTahmin++;
                         }
                     });
